@@ -1,0 +1,28 @@
+{
+  "name": "com.unity.services.qos",
+  "displayName": "QoS",
+  "version": "1.0.0",
+  "unity": "2020.3",
+  "description": "Provides connectivity Quality of Service (QoS) measurements from Unity game clients to different Unity game services running in various geographic regions.",
+  "dependencies": {
+    "com.unity.services.core": "1.3.2",
+    "com.unity.modules.unitywebrequest": "1.0.0",
+    "com.unity.nuget.newtonsoft-json": "3.0.1",
+    "com.unity.services.authentication": "2.0.0",
+    "com.unity.collections": "1.2.3"
+  },
+  "_upm": {
+    "changelog": "### Added\n- Metrics reporting for latency & packet loss\n\n### Changed\n- Update Core/Auth/Collections dependencies\n- Use proper assembly name Unity.Services.QoS instead of Unity.ucg.QoS (this makes the SDK unsupported on some older editor versions)"
+  },
+  "relatedPackages": {
+    "com.unity.services.qos.tests": "1.0.0"
+  },
+  "upmCi": {
+    "footprint": "5d714c2b7264a6b42a9806e526836fa4c9238c7c"
+  },
+  "repository": {
+    "url": "https://github.cds.internal.unity3d.com/unity/operate-services-sdk.git",
+    "type": "git",
+    "revision": "05fbc0ac0de5e9db0afd565d406c9760faf1580c"
+  }
+}
