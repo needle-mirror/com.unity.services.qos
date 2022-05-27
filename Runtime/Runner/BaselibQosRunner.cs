@@ -34,7 +34,7 @@ namespace Unity.Services.Qos.Runner
         }
 
         // MeasureQos will return an empty list if an error occurs
-        public async Task<List<QosResult>> MeasureQosAsync(IList<QosServer> servers)
+        public async Task<List<Internal.QosResult>> MeasureQosAsync(IList<QosServer> servers)
         {
             var convertedServers = (await Task.WhenAll(servers.Select(ToUcgFormat)))
                 .Where(s => s.HasValue)
@@ -51,7 +51,7 @@ namespace Unity.Services.Qos.Runner
             }
             handle.Complete();
 
-            var results = new List<QosResult>();
+            var results = new List<Internal.QosResult>();
             if (servers.Count() == job.QosResults.Count())
             {
                 results = ParseResults(job.QosResults, servers);
@@ -110,9 +110,9 @@ namespace Unity.Services.Qos.Runner
             return ucgServer;
         }
 
-        static List<QosResult> ParseResults(IEnumerable<InternalQosResult> ucgResults, IEnumerable<QosServer> servers)
+        static List<Internal.QosResult> ParseResults(IEnumerable<InternalQosResult> ucgResults, IEnumerable<QosServer> servers)
         {
-            var results = new List<QosResult>();
+            var results = new List<Internal.QosResult>();
             using var enr = servers.GetEnumerator();
             foreach (InternalQosResult r in ucgResults)
             {
@@ -125,7 +125,7 @@ namespace Unity.Services.Qos.Runner
                 // avoid overflow when converting from uint to int
                 int avgLatency = r.AverageLatencyMs > int.MaxValue ? int.MaxValue : (int)r.AverageLatencyMs;
 
-                results.Add(new QosResult
+                results.Add(new Internal.QosResult
                 {
                     Region = enr.Current.Region, // note: the results from ucg do not contain the region, so we assume they're in the same order as the servers list to populate the field.
                     AverageLatencyMs = avgLatency,

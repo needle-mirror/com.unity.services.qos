@@ -37,9 +37,10 @@ namespace Unity.Services.Qos
             QosDiscoveryService.Instance = new InternalQosDiscoveryService(httpClient, accessTokenQosDiscovery);
 
             // Set up public QoS interface
-            QosService.Instance = new WrappedQosService(QosDiscoveryService.Instance.QosDiscoveryApi,
+            var wrappedQosService = new WrappedQosService(QosDiscoveryService.Instance.QosDiscoveryApi,
                 new BaselibQosRunner(), accessTokenQosDiscovery, metrics);
-            registry.RegisterServiceComponent<IQosResults>(new QosResults(QosService.Instance));
+            QosService.Instance = wrappedQosService;
+            registry.RegisterServiceComponent<IQosResults>(new QosResults(wrappedQosService));
 
             return Task.CompletedTask;
         }

@@ -1,8 +1,6 @@
-using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
-using Unity.Services.Qos.Internal;
 
 [assembly: InternalsVisibleTo("Unity.Services.Qos.Tests")]
 [assembly: InternalsVisibleTo("DynamicProxyGenAssembly2")]
@@ -72,6 +70,38 @@ namespace Unity.Services.Qos
         /// <param name="regions">The regions to query for QoS. If not null or empty, `GetSortedQosResultsAsync` only uses
         /// regions in the intersection of the specified service and the specified regions for measurements.</param>
         /// <returns>Returns the sorted list of QoS results, ordered from best to worst.</returns>
-        Task<IList<QosResult>> GetSortedQosResultsAsync(string service, IList<string> regions);
+        Task<IList<IQosResult>> GetSortedQosResultsAsync(string service, IList<string> regions);
+    }
+
+    /// <summary>
+    /// Represents the results of QoS measurements for a given region.
+    /// </summary>
+    public interface IQosResult
+    {
+        /// <summary>
+        /// The identifier for the service's region used in this set of QoS measurements.
+        /// </summary>
+        /// <value>A string containing the region name.
+        /// </value>
+        public string Region { get; }
+        /// <summary>
+        /// Average latency of QoS measurements to the region.
+        /// </summary>
+        /// <remarks>
+        /// The latency is determined by measuring the time between sending a packet and receiving the response for that packet,
+        /// then taking the average for all responses received. Only packets for which a response was received are
+        /// considered in the calculation.
+        /// </remarks>
+        /// <value>A positive integer, in milliseconds.</value>
+        public int AverageLatencyMs { get; }
+        /// <summary>
+        /// Percentage of packet loss observed in QoS measurements to the region.
+        /// </summary>
+        /// <remarks>
+        /// Packet loss is determined by counting the number of packets for which a response was received from the QoS server,
+        /// then taking the percentage based on the total number of packets sent.
+        /// </remarks>
+        /// <value>A positive flow value. The range is 0.0f - 1.0f (0 - 100%).</value>
+        public float PacketLossPercent { get; }
     }
 }

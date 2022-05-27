@@ -8,6 +8,6 @@ namespace Unity.Services.Qos.Runner
     interface IQosRunner
     {
         // Returning a List for simpler sorting (IList doesn't have a Sort method)
-        Task<List<QosResult>> MeasureQosAsync(IList<QosServer> servers);
+        Task<List<Internal.QosResult>> MeasureQosAsync(IList<QosServer> servers);
     }
 }

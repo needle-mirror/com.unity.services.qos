@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using Unity.Services.Authentication.Internal;
 using Unity.Services.Core.Telemetry.Internal;
 using Unity.Services.Qos.Apis.QosDiscovery;
-using Unity.Services.Qos.Internal;
 using Unity.Services.Qos.QosDiscovery;
 using Unity.Services.Qos.Runner;
 
@@ -54,7 +53,14 @@ namespace Unity.Services.Qos
         /// Notice that the third entry (1,3) is put before the (2,1) because it has less latency, even if it has more
         /// packet loss.
         /// In case where no QoS servers can be found, no QoS is performed and an empty list is returned.
-        public async Task<IList<QosResult>> GetSortedQosResultsAsync(string service, IList<string> regions)
+        public async Task<IList<IQosResult>> GetSortedQosResultsAsync(string service, IList<string> regions)
+        {
+            return (await GetSortedInternalQosResultsAsync(service, regions))
+                .Select(MapToPublicQosResult)
+                .ToList();
+        }
+
+        internal async Task<IList<Internal.QosResult>> GetSortedInternalQosResultsAsync(string service, IList<string> regions)
         {
 #if UGS_QOS_SUPPORTED
             if (string.IsNullOrEmpty(_accessToken.AccessToken))
@@ -77,7 +83,7 @@ namespace Unity.Services.Qos
             // empty response, return no results
             if (!servers.Any())
             {
-                return new List<QosResult>();
+                return new List<Internal.QosResult>();
             }
 
             var qosResults = await _qosRunner.MeasureQosAsync(servers);
@@ -87,11 +93,11 @@ namespace Unity.Services.Qos
             return sortedResults;
 #else
             throw new UnsupportedEditorVersionException(
-                "QoS SDK does not support this version of Unity, please upgrade to the latest version of 2020.3 LTS, 2021.3 LTS, or newer");
+                "QoS SDK does not support this version of Unity, please upgrade to 2020.3.34f1+, 2021.3.2f1+, 2022.1.0f1+, 2022.2.0a10+, or newer.");
 #endif
         }
 
-        List<QosResult> SortResults(IList<QosResult> results)
+        List<Internal.QosResult> SortResults(IList<Internal.QosResult> results)
         {
             return results
                 .OrderBy(q => q.AverageLatencyMs)
@@ -99,7 +105,7 @@ namespace Unity.Services.Qos
                 .ToList();
         }
 
-        void SendResultMetrics(IList<QosResult> sortedResults, string service, Response discoveryResponse)
+        void SendResultMetrics(IList<Internal.QosResult> sortedResults, string service, Response discoveryResponse)
         {
             // don't send metrics in the rare case that there are no results
             if (sortedResults.Count == 0)
@@ -136,6 +142,26 @@ namespace Unity.Services.Qos
                 _metrics.SendHistogramMetric(ResultPacketLossMetricName, result.PacketLossPercent, metricTags);
             }
         }
+
+        IQosResult MapToPublicQosResult(Internal.QosResult internalQosResult)
+        {
+            return new QosResult(internalQosResult.Region, internalQosResult.AverageLatencyMs,
+                internalQosResult.PacketLossPercent);
+        }
+    }
+
+    class QosResult : IQosResult
+    {
+        public QosResult(string region, int averageLatencyMs, float packetLossPercent)
+        {
+            Region = region;
+            AverageLatencyMs = averageLatencyMs;
+            PacketLossPercent = packetLossPercent;
+        }
+
+        public string Region { get; }
+        public int AverageLatencyMs { get; }
+        public float PacketLossPercent { get; }
     }
 
     class UnsupportedEditorVersionException : Exception
