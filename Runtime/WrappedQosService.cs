@@ -15,11 +15,11 @@ namespace Unity.Services.Qos
         const string ResultLatencyMetricName = "qos_result_latency_ms";
         const string ResultPacketLossMetricName = "qos_result_packet_loss";
 
-        const string MetricServiceNameLabelName = "service_name";
-        const string MetricServiceRegionLabelName = "service_region";
-        const string MetricClientCountryLabelName = "client_country";
-        const string MetricClientRegionLabelName = "client_region";
-        const string MetricClientBestResultLabelName = "best_result";
+        const string MetricServiceNameLabelName = "qos_service_name";
+        const string MetricServiceRegionLabelName = "qos_service_region";
+        const string MetricClientCountryLabelName = "qos_client_country";
+        const string MetricClientRegionLabelName = "qos_client_region";
+        const string MetricClientBestResultLabelName = "qos_best_result";
         const string MetricClientBestResultLabelTrueValue = "true";
 
         IQosDiscoveryApiClient _qosDiscoveryApiClient;
