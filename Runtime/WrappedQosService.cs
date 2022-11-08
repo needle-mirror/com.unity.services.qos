@@ -7,6 +7,7 @@ using Unity.Services.Core.Telemetry.Internal;
 using Unity.Services.Qos.Apis.QosDiscovery;
 using Unity.Services.Qos.QosDiscovery;
 using Unity.Services.Qos.Runner;
+using UnityEngine;
 
 namespace Unity.Services.Qos
 {
@@ -62,7 +63,7 @@ namespace Unity.Services.Qos
 
         internal async Task<IList<Internal.QosResult>> GetSortedInternalQosResultsAsync(string service, IList<string> regions)
         {
-#if UGS_QOS_SUPPORTED
+#if UGS_QOS_SUPPORTED && !UNITY_WEBGL
             if (string.IsNullOrEmpty(_accessToken.AccessToken))
             {
                 throw new Exception("Access token not available, please sign in with the Authentication Service.");
@@ -92,8 +93,13 @@ namespace Unity.Services.Qos
             SendResultMetrics(sortedResults, service, httpResp);
             return sortedResults;
 #else
+#if UNITY_WEBGL
+            throw new PlatformNotSupportedException(
+                "QoS SDK does not support WebGL at this time.");
+#else
             throw new UnsupportedEditorVersionException(
                 "QoS SDK does not support this version of Unity, please upgrade to 2020.3.34f1+, 2021.3.2f1+, 2022.1.0f1+, 2022.2.0a10+, or newer.");
+#endif
 #endif
         }
 
