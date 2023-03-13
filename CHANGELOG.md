@@ -5,6 +5,13 @@ All notable changes to this package will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2023-03-13
+
+### Changed
+- Updated Code Generation to latest and regenerated SDK code
+- Re-generate code with latest spec and generator
+- Add new QoS APIs for specific Relay and Multiplay QoS servers searching and result
+
 ## [1.1.0] - 2022-11-08
 
 ### Changed
@@ -52,4 +59,3 @@ unusable from the default Unity assembly (Assembly-CSharp)
 - SDK public API
 - Real QoS measurements
 - Public API documentation
-

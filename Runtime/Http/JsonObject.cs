@@ -11,6 +11,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using UnityEngine.Scripting;
@@ -22,7 +23,8 @@ namespace Unity.Services.Qos.Http
     /// hide internal Json implementation details.
     /// </summary>
     [Preserve]
-    internal class JsonObject
+    [JsonConverter(typeof(JsonObjectConverter))]
+    internal class JsonObject : IDeserializable
     {
         /// <summary>
         /// Constructor sets object as the internal object.
@@ -45,10 +47,16 @@ namespace Unity.Services.Qos.Http
         {
             try
             {
+                if (obj == null)
+                {
+                    return "";
+                }
+
                 if (obj.GetType() == typeof(String))
                 {
                     return obj.ToString();
                 }
+                
                 return JsonConvert.SerializeObject(obj);
             }
             catch (System.Exception)
@@ -98,6 +106,78 @@ namespace Unity.Services.Qos.Http
             }
         }
 
+        /// <summary>
+        /// Overload for returning the object as a defined type but without
+        /// needing to specify DeserializationSettings.
+        /// </summary>
+        /// <typeparam name="T">The type to cast internal object to.</typeparam>
+        /// <returns>The internal object case to type T.</returns>
+        public T GetAs<T>()
+        {
+            return this.GetAs<T>(null);
+        }
+
+        /// <summary>
+        /// Convert object to jsonobject.
+        /// </summary>
+        /// <param name="o">The object.</param>
+        /// <returns>The jsonobject.</returns>
+        internal static IDeserializable GetNewJsonObjectResponse(object o)
+        {
+            return (IDeserializable) new JsonObject(o);
+        }
+
+        /// <summary>
+        /// Convert list of object to list of jsonobject.
+        /// </summary>
+        /// <param name="o">The list of objects.</param>
+        /// <returns>The list of jsonobjects.</returns>
+        internal static List<IDeserializable> GetNewJsonObjectResponse(List<object> o)
+        {
+            if (o == null) {
+                return null;
+            }
+            return o.Select(v => (IDeserializable) new JsonObject(v)).ToList();
+        }
+
+        /// <summary>
+        /// Convert list of list of object to list of list of jsonobject.
+        /// </summary>
+        /// <param name="o">The list of list of objects.</param>
+        /// <returns>The list of list of jsonobjects.</returns>
+        internal static List<List<IDeserializable>> GetNewJsonObjectResponse(List<List<object>> o)
+        {
+            if (o == null) {
+                return null;
+            }
+            return o.Select(l => l.Select(v => v == null ? null : (IDeserializable) new JsonObject(v)).ToList()).ToList();
+        }
+
+        /// <summary>
+        /// Convert dictionary of string, object to dictionary of string, jsonobject.
+        /// </summary>
+        /// <param name="o">The dictionary of string, objects.</param>
+        /// <returns>The dictionary of string, jsonobjects.</returns>
+        internal static Dictionary<string, IDeserializable> GetNewJsonObjectResponse(Dictionary<string, object> o)
+        {
+            if (o == null) {
+                return null;
+            }
+            return o.ToDictionary(kv => kv.Key, kv => (IDeserializable) new JsonObject(kv.Value));
+        }
+
+        /// <summary>
+        /// Convert dictionary of string, list of object to dictionary of string, list of jsonobject.
+        /// </summary>
+        /// <param name="o">The dictionary of string to list of objects.</param>
+        /// <returns>The dictionary of string, list of jsonobjects.</returns>
+        internal static Dictionary<string, List<IDeserializable>> GetNewJsonObjectResponse(Dictionary<string, List<object>> o) {
+            if (o == null) {
+                return null;
+            }
+            return o.ToDictionary(kv => kv.Key, kv => GetNewJsonObjectResponse(kv.Value));
+        }
+
         private List<string> ValidateObject<T>(T objectToCheck, List<string> errors = null)
         {
             if (errors == null)
@@ -129,15 +209,29 @@ namespace Unity.Services.Qos.Http
         private void ValidatePropertyInfos<T>(T objectToCheck, List<string> errors)
         {
             var propertyInfos = objectToCheck.GetType().GetProperties();
+            
             foreach (var propertyInfo in propertyInfos)
             {
-                var value = propertyInfo.GetValue(objectToCheck);
-                var memberName = propertyInfo.Name;
-                var objectName = objectToCheck.GetType().Name;
-                ValidateValue(value, objectName, "Property", memberName, errors);
-            }
+                if (propertyInfo.GetIndexParameters().Length > 0)
+                {
+                    for (int index = 0; index < propertyInfo.GetIndexParameters().Length; index++)
+                    {
+                        var value = propertyInfo.GetValue(objectToCheck, new object[] { index });
+                        var memberName = propertyInfo.Name;
+                        var objectName = objectToCheck.GetType().Name;
+                        ValidateValue(value, objectName, "Property", memberName, errors);
+                    }
+                }
+                else
+                { 
+                    var value = propertyInfo.GetValue(objectToCheck);
+                    var memberName = propertyInfo.Name;
+                    var objectName = objectToCheck.GetType().Name;
+                    ValidateValue(value, objectName, "Property", memberName, errors);
+                }
+            } 
         }
-
+                                        
         private void ValidateFieldInfos<T>(T objectToCheck, List<string> errors)
         {
             var fieldInfos = objectToCheck.GetType().GetFields();

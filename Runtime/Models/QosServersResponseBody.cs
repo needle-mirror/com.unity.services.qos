@@ -10,6 +10,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine.Scripting;
 using System.Runtime.Serialization;
 using Newtonsoft.Json;
@@ -38,12 +39,36 @@ namespace Unity.Services.Qos.Models
         }
 
         /// <summary>
-        /// 
+        /// Parameter data of QosServersResponseBody
         /// </summary>
         [Preserve]
         [DataMember(Name = "data", IsRequired = true, EmitDefaultValue = true)]
         public QosServersList Data{ get; }
     
+        /// <summary>
+        /// Formats a QosServersResponseBody into a string of key-value pairs for use as a path parameter.
+        /// </summary>
+        /// <returns>Returns a string representation of the key-value pairs.</returns>
+        internal string SerializeAsPathParam()
+        {
+            var serializedModel = "";
+
+            if (Data != null)
+            {
+                serializedModel += "data," + Data.ToString();
+            }
+            return serializedModel;
+        }
+
+        /// <summary>
+        /// Returns a QosServersResponseBody as a dictionary of key-value pairs for use as a query parameter.
+        /// </summary>
+        /// <returns>Returns a dictionary of string key-value pairs.</returns>
+        internal Dictionary<string, string> GetAsQueryParam()
+        {
+            var dictionary = new Dictionary<string, string>();
+
+            return dictionary;
+        }
     }
 }
-

@@ -71,6 +71,28 @@ namespace Unity.Services.Qos
         /// regions in the intersection of the specified service and the specified regions for measurements.</param>
         /// <returns>Returns the sorted list of QoS results, ordered from best to worst.</returns>
         Task<IList<IQosResult>> GetSortedQosResultsAsync(string service, IList<string> regions);
+
+        /// <summary>
+        /// Gets sorted QoS measurements for Relay service.
+        /// </summary>
+        /// <remarks>
+        /// If you specify regions, it only includes those regions.
+        /// </remarks>
+        /// <param name="regions">The regions to query for QoS. If not null or empty, `GetSortedRelayQosResultsAsync` only
+        /// uses the specified regions for measurements.</param>
+        /// <returns>Returns the sorted list of QoS results, ordered from best to worst.</returns>
+        Task<IList<IQosAnnotatedResult>> GetSortedRelayQosResultsAsync(IList<string> regions);
+
+        /// <summary>
+        /// Gets sorted QoS measurements for Multiplay service.
+        /// </summary>
+        /// <remarks>
+        /// The fleet ID must be a valid Multiplay fleet ID.
+        /// </remarks>
+        /// <param name="fleet">The fleet to query for QoS. `GetSortedMultiplayQosResultsAsync` only uses QoS servers
+        /// in the regions of the fleet for measurements. At least one fleet ID must be passed</param>
+        /// <returns>Returns the sorted list of QoS results, ordered from best to worst.</returns>
+        Task<IList<IQosAnnotatedResult>> GetSortedMultiplayQosResultsAsync(IList<string> fleet);
     }
 
     /// <summary>
@@ -84,6 +106,7 @@ namespace Unity.Services.Qos
         /// <value>A string containing the region name.
         /// </value>
         public string Region { get; }
+
         /// <summary>
         /// Average latency of QoS measurements to the region.
         /// </summary>
@@ -94,6 +117,7 @@ namespace Unity.Services.Qos
         /// </remarks>
         /// <value>A positive integer, in milliseconds.</value>
         public int AverageLatencyMs { get; }
+
         /// <summary>
         /// Percentage of packet loss observed in QoS measurements to the region.
         /// </summary>
@@ -103,5 +127,18 @@ namespace Unity.Services.Qos
         /// </remarks>
         /// <value>A positive flow value. The range is 0.0f - 1.0f (0 - 100%).</value>
         public float PacketLossPercent { get; }
+    }
+
+    /// <summary>
+    /// Represents the results of QoS measurements for a given region with additional annotations.
+    /// </summary>
+    public interface IQosAnnotatedResult : IQosResult
+    {
+        /// <summary>
+        /// The results annotations.
+        /// </summary>
+        /// <value>A dictionary of additional information.
+        /// </value>
+        public Dictionary<string, List<string>> Annotations { get; }
     }
 }

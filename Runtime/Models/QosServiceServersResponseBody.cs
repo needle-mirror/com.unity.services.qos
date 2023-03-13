@@ -22,46 +22,46 @@ using Unity.Services.Qos.Http;
 namespace Unity.Services.Qos.Models
 {
     /// <summary>
-    /// QosServersList model
+    /// QosServiceServersResponseBody model
     /// </summary>
     [Preserve]
-    [DataContract(Name = "QosServersList")]
-    internal class QosServersList
+    [DataContract(Name = "QosServiceServersResponseBody")]
+    internal class QosServiceServersResponseBody
     {
         /// <summary>
-        /// Creates an instance of QosServersList.
+        /// Creates an instance of QosServiceServersResponseBody.
         /// </summary>
-        /// <param name="servers">An array of connection information for QoS servers.</param>
+        /// <param name="data">data param</param>
         [Preserve]
-        public QosServersList(List<QosServer> servers)
+        public QosServiceServersResponseBody(QosServiceServersList data)
         {
-            Servers = servers;
+            Data = data;
         }
 
         /// <summary>
-        /// An array of connection information for QoS servers.
+        /// Parameter data of QosServiceServersResponseBody
         /// </summary>
         [Preserve]
-        [DataMember(Name = "servers", IsRequired = true, EmitDefaultValue = true)]
-        public List<QosServer> Servers{ get; }
+        [DataMember(Name = "data", IsRequired = true, EmitDefaultValue = true)]
+        public QosServiceServersList Data{ get; }
     
         /// <summary>
-        /// Formats a QosServersList into a string of key-value pairs for use as a path parameter.
+        /// Formats a QosServiceServersResponseBody into a string of key-value pairs for use as a path parameter.
         /// </summary>
         /// <returns>Returns a string representation of the key-value pairs.</returns>
         internal string SerializeAsPathParam()
         {
             var serializedModel = "";
 
-            if (Servers != null)
+            if (Data != null)
             {
-                serializedModel += "servers," + Servers.ToString();
+                serializedModel += "data," + Data.ToString();
             }
             return serializedModel;
         }
 
         /// <summary>
-        /// Returns a QosServersList as a dictionary of key-value pairs for use as a query parameter.
+        /// Returns a QosServiceServersResponseBody as a dictionary of key-value pairs for use as a query parameter.
         /// </summary>
         /// <returns>Returns a dictionary of string key-value pairs.</returns>
         internal Dictionary<string, string> GetAsQueryParam()

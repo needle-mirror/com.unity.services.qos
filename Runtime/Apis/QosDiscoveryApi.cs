@@ -32,6 +32,16 @@ namespace Unity.Services.Qos.Apis.QosDiscovery
             /// <exception cref="Unity.Services.Qos.Http.HttpException">An exception containing the HttpClientResponse with headers, response code, and string of error.</exception>
             Task<Response<Models.QosServersResponseBody>> GetServersAsync(Unity.Services.Qos.QosDiscovery.GetServersRequest request, Configuration operationConfiguration = null);
 
+            /// <summary>
+            /// Async Operation.
+            /// Get Service Servers.
+            /// </summary>
+            /// <param name="request">Request object for GetServiceServers.</param>
+            /// <param name="operationConfiguration">Configuration for GetServiceServers.</param>
+            /// <returns>Task for a Response object containing status code, headers, and Models.QosServiceServersResponseBody object.</returns>
+            /// <exception cref="Unity.Services.Qos.Http.HttpException">An exception containing the HttpClientResponse with headers, response code, and string of error.</exception>
+            Task<Response<Models.QosServiceServersResponseBody>> GetServiceServersAsync(Unity.Services.Qos.QosDiscovery.GetServiceServersRequest request, Configuration operationConfiguration = null);
+
     }
 
     ///<inheritdoc cref="IQosDiscoveryApiClient"/>
@@ -100,6 +110,33 @@ namespace Unity.Services.Qos.Apis.QosDiscovery
 
             var handledResponse = ResponseHandler.HandleAsyncResponse<Models.QosServersResponseBody>(response, statusCodeToTypeMap);
             return new Response<Models.QosServersResponseBody>(response, handledResponse);
+        }
+
+
+        /// <summary>
+        /// Async Operation.
+        /// Get Service Servers.
+        /// </summary>
+        /// <param name="request">Request object for GetServiceServers.</param>
+        /// <param name="operationConfiguration">Configuration for GetServiceServers.</param>
+        /// <returns>Task for a Response object containing status code, headers, and Models.QosServiceServersResponseBody object.</returns>
+        /// <exception cref="Unity.Services.Qos.Http.HttpException">An exception containing the HttpClientResponse with headers, response code, and string of error.</exception>
+        public async Task<Response<Models.QosServiceServersResponseBody>> GetServiceServersAsync(Unity.Services.Qos.QosDiscovery.GetServiceServersRequest request,
+            Configuration operationConfiguration = null)
+        {
+            var statusCodeToTypeMap = new Dictionary<string, System.Type>() { {"200", typeof(Models.QosServiceServersResponseBody)   },{"400", typeof(Models.ErrorResponseBody)   },{"401", typeof(Models.ErrorResponseBody)   },{"403", typeof(Models.ErrorResponseBody)   },{"429", typeof(Models.ErrorResponseBody)   },{"500", typeof(Models.ErrorResponseBody)   },{"503", typeof(Models.ErrorResponseBody)   } };
+
+            // Merge the operation/request level configuration with the client level configuration.
+            var finalConfiguration = Configuration.MergeConfigurations(operationConfiguration, Configuration);
+
+            var response = await HttpClient.MakeRequestAsync("GET",
+                request.ConstructUrl(finalConfiguration.BasePath),
+                request.ConstructBody(),
+                request.ConstructHeaders(_accessToken, finalConfiguration),
+                finalConfiguration.RequestTimeout ?? _baseTimeout);
+
+            var handledResponse = ResponseHandler.HandleAsyncResponse<Models.QosServiceServersResponseBody>(response, statusCodeToTypeMap);
+            return new Response<Models.QosServiceServersResponseBody>(response, handledResponse);
         }
 
     }

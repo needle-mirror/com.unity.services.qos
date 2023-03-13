@@ -22,18 +22,18 @@ using Unity.Services.Qos.Http;
 namespace Unity.Services.Qos.Models
 {
     /// <summary>
-    /// QosServersList model
+    /// QosServiceServersList model
     /// </summary>
     [Preserve]
-    [DataContract(Name = "QosServersList")]
-    internal class QosServersList
+    [DataContract(Name = "QosServiceServersList")]
+    internal class QosServiceServersList
     {
         /// <summary>
-        /// Creates an instance of QosServersList.
+        /// Creates an instance of QosServiceServersList.
         /// </summary>
         /// <param name="servers">An array of connection information for QoS servers.</param>
         [Preserve]
-        public QosServersList(List<QosServer> servers)
+        public QosServiceServersList(List<QosServiceServer> servers)
         {
             Servers = servers;
         }
@@ -43,10 +43,10 @@ namespace Unity.Services.Qos.Models
         /// </summary>
         [Preserve]
         [DataMember(Name = "servers", IsRequired = true, EmitDefaultValue = true)]
-        public List<QosServer> Servers{ get; }
+        public List<QosServiceServer> Servers{ get; }
     
         /// <summary>
-        /// Formats a QosServersList into a string of key-value pairs for use as a path parameter.
+        /// Formats a QosServiceServersList into a string of key-value pairs for use as a path parameter.
         /// </summary>
         /// <returns>Returns a string representation of the key-value pairs.</returns>
         internal string SerializeAsPathParam()
@@ -61,7 +61,7 @@ namespace Unity.Services.Qos.Models
         }
 
         /// <summary>
-        /// Returns a QosServersList as a dictionary of key-value pairs for use as a query parameter.
+        /// Returns a QosServiceServersList as a dictionary of key-value pairs for use as a query parameter.
         /// </summary>
         /// <returns>Returns a dictionary of string key-value pairs.</returns>
         internal Dictionary<string, string> GetAsQueryParam()

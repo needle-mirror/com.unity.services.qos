@@ -25,21 +25,21 @@ namespace Unity.Services.Qos.Models
     /// The connection information of a QoS server.
     /// </summary>
     [Preserve]
-    [DataContract(Name = "QosServer")]
-    internal class QosServer
+    [DataContract(Name = "QosServiceServer")]
+    internal class QosServiceServer
     {
         /// <summary>
         /// The connection information of a QoS server.
         /// </summary>
         /// <param name="endpoints">Endpoints at which you can reach the QoS server.</param>
         /// <param name="region">The region to which the QoS server belongs.</param>
-        /// <param name="services">The services using this QoS server.</param>
+        /// <param name="annotations">A dictionary of server annotations.</param>
         [Preserve]
-        public QosServer(List<string> endpoints, string region, List<string> services = default)
+        public QosServiceServer(List<string> endpoints, string region, Dictionary<string, List<string>> annotations = default)
         {
             Endpoints = endpoints;
             Region = region;
-            Services = services;
+            Annotations = annotations;
         }
 
         /// <summary>
@@ -57,14 +57,14 @@ namespace Unity.Services.Qos.Models
         public string Region{ get; }
         
         /// <summary>
-        /// The services using this QoS server.
+        /// A dictionary of server annotations.
         /// </summary>
         [Preserve]
-        [DataMember(Name = "services", EmitDefaultValue = false)]
-        public List<string> Services{ get; }
+        [DataMember(Name = "annotations", EmitDefaultValue = false)]
+        public Dictionary<string, List<string>> Annotations{ get; }
     
         /// <summary>
-        /// Formats a QosServer into a string of key-value pairs for use as a path parameter.
+        /// Formats a QosServiceServer into a string of key-value pairs for use as a path parameter.
         /// </summary>
         /// <returns>Returns a string representation of the key-value pairs.</returns>
         internal string SerializeAsPathParam()
@@ -79,15 +79,15 @@ namespace Unity.Services.Qos.Models
             {
                 serializedModel += "region," + Region + ",";
             }
-            if (Services != null)
+            if (Annotations != null)
             {
-                serializedModel += "services," + Services.ToString();
+                serializedModel += "annotations," + Annotations.ToString();
             }
             return serializedModel;
         }
 
         /// <summary>
-        /// Returns a QosServer as a dictionary of key-value pairs for use as a query parameter.
+        /// Returns a QosServiceServer as a dictionary of key-value pairs for use as a query parameter.
         /// </summary>
         /// <returns>Returns a dictionary of string key-value pairs.</returns>
         internal Dictionary<string, string> GetAsQueryParam()
@@ -106,10 +106,10 @@ namespace Unity.Services.Qos.Models
                 dictionary.Add("region", regionStringValue);
             }
             
-            if (Services != null)
+            if (Annotations != null)
             {
-                var servicesStringValue = Services.ToString();
-                dictionary.Add("services", servicesStringValue);
+                var annotationsStringValue = Annotations.ToString();
+                dictionary.Add("annotations", annotationsStringValue);
             }
             
             return dictionary;

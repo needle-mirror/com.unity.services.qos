@@ -32,7 +32,7 @@ namespace Unity.Services.Qos.QosDiscovery
 
         public static string SerializeToString<T>(T obj)
         {
-            return JsonConvert.SerializeObject(obj);
+            return JsonConvert.SerializeObject(obj, new JsonSerializerSettings{ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore});
         }
     }
 
@@ -91,6 +91,25 @@ namespace Unity.Services.Qos.QosDiscovery
                 }
                 paramString = paramString.Remove(paramString.Length - 1);
                 queryParams.Add(paramString);
+            }
+
+            return queryParams;
+        }
+
+        /// <summary>
+        /// Helper function to add a provided map of keys and values, representing a model, to the
+        /// provided query params.
+        /// </summary>
+        /// <param name="queryParams">A `List/<string/>` of the query parameters.</param>
+        /// <param name="modelVars">A `Dictionary` representing the vars of the model</param>
+        /// <returns>Returns a `List/<string/>`</returns>
+        [Preserve]
+        public List<string> AddParamsToQueryParams(List<string> queryParams, Dictionary<string, string> modelVars)
+        {
+            foreach(var key in modelVars.Keys)
+            {
+                string escapedValue = UnityWebRequest.EscapeURL(modelVars[key]);
+                queryParams.Add($"{UnityWebRequest.EscapeURL(key)}={escapedValue}");
             }
 
             return queryParams;
@@ -259,26 +278,22 @@ namespace Unity.Services.Qos.QosDiscovery
         /// <summary>Accessor for region </summary>
         [Preserve]
         public List<string> Region { get; }
-        
         /// <summary>Accessor for service </summary>
         [Preserve]
         public string Service { get; }
-        
         string PathAndQueryParams;
 
         /// <summary>
         /// GetServers Request Object.
         /// Get Servers
         /// </summary>
-        /// <param name="region">Filter the QoS servers by these regions. For example, providing `us-east1` and `europe-west2` will return only the QoS servers in those regions for the specified service.  You can pass multiple values using multiple query parameters. For example, `?region=us-east1&region=europe-west2`.  If you omit the region, it returns all QoS servers that match the other filters.</param>
+        /// <param name="region">region param</param>
         /// <param name="service">The service for which the client is requesting QoS servers. Valid values are:   - relay   - multiplay</param>
         [Preserve]
         public GetServersRequest(List<string> region = default(List<string>), string service = default(string))
         {
             Region = region;
-                        Service = service;
-            
-
+            Service = service;
             PathAndQueryParams = $"/v1/servers";
 
             List<string> queryParams = new List<string>();
@@ -291,6 +306,143 @@ namespace Unity.Services.Qos.QosDiscovery
             if(!string.IsNullOrEmpty(Service))
             {
                 queryParams = AddParamsToQueryParams(queryParams, "service", Service);
+            }
+            if (queryParams.Count > 0)
+            {
+                PathAndQueryParams = $"{PathAndQueryParams}?{string.Join("&", queryParams)}";
+            }
+        }
+
+        /// <summary>
+        /// Helper function for constructing URL from request base path and
+        /// query params.
+        /// </summary>
+        /// <param name="requestBasePath"></param>
+        /// <returns></returns>
+        public string ConstructUrl(string requestBasePath)
+        {
+            return requestBasePath + PathAndQueryParams;
+        }
+
+        /// <summary>
+        /// Helper for constructing the request body.
+        /// </summary>
+        /// <returns>A list of IMultipartFormSection representing the request body.</returns>
+        public byte[] ConstructBody()
+        {
+            return null;
+        }
+
+        /// <summary>
+        /// Helper function for constructing the headers.
+        /// </summary>
+        /// <param name="accessToken">The auth access token to use.</param>
+        /// <param name="operationConfiguration">The operation configuration to use.</param>
+        /// <returns>A dictionary representing the request headers.</returns>
+        public Dictionary<string, string> ConstructHeaders(IAccessToken accessToken,
+            Configuration operationConfiguration = null)
+        {
+            var headers = new Dictionary<string, string>();
+            if(!string.IsNullOrEmpty(accessToken.AccessToken))
+            {
+                headers.Add("authorization", "Bearer " + accessToken.AccessToken);
+            }
+
+            // Analytics headers
+            headers.Add("Unity-Client-Version", Application.unityVersion);
+            headers.Add("Unity-Client-Mode", Scheduler.EngineStateHelper.IsPlaying ? "play" : "edit");
+
+            string[] contentTypes = {
+            };
+
+            string[] accepts = {
+                "application/json",
+                "application/problem+json"
+            };
+
+            var acceptHeader = GenerateAcceptHeader(accepts);
+            if (!string.IsNullOrEmpty(acceptHeader))
+            {
+                headers.Add("Accept", acceptHeader);
+            }
+            var httpMethod = "GET";
+            var contentTypeHeader = GenerateContentTypeHeader(contentTypes);
+            if (!string.IsNullOrEmpty(contentTypeHeader))
+            {
+                headers.Add("Content-Type", contentTypeHeader);
+            }
+            else if (httpMethod == "POST" || httpMethod == "PATCH")
+            {
+                headers.Add("Content-Type", "application/json");
+            }
+
+
+            // We also check if there are headers that are defined as part of
+            // the request configuration.
+            if (operationConfiguration != null && operationConfiguration.Headers != null)
+            {
+                foreach (var pair in operationConfiguration.Headers)
+                {
+                    headers[pair.Key] = pair.Value;
+                }
+            }
+
+            return headers;
+        }
+    }
+    /// <summary>
+    /// GetServiceServersRequest
+    /// Get Service Servers
+    /// </summary>
+    [Preserve]
+    internal class GetServiceServersRequest : QosDiscoveryApiBaseRequest
+    {
+        
+        /// <summary>Valid value of serviceId for relay</summary>
+        public const string ServiceIdRelay = "relay";
+
+        
+        /// <summary>Valid value of serviceId for multiplay</summary>
+        public const string ServiceIdMultiplay = "multiplay";
+
+        /// <summary>Accessor for serviceId </summary>
+        [Preserve]
+        public string ServiceId { get; }
+        /// <summary>Accessor for region </summary>
+        [Preserve]
+        public List<string> Region { get; }
+        /// <summary>Accessor for fleet </summary>
+        [Preserve]
+        public List<string> Fleet { get; }
+        string PathAndQueryParams;
+
+        /// <summary>
+        /// GetServiceServers Request Object.
+        /// Get Service Servers
+        /// </summary>
+        /// <param name="serviceId">The service for which the client is requesting QoS servers. Valid values are:   - relay   - multiplay</param>
+        /// <param name="region">region param</param>
+        /// <param name="fleet">fleet param</param>
+        [Preserve]
+        public GetServiceServersRequest(string serviceId, List<string> region = default(List<string>), List<string> fleet = default(List<string>))
+        {
+            ServiceId = serviceId;
+
+            Region = region;
+            Fleet = fleet;
+            PathAndQueryParams = $"/v1/services/{serviceId}/servers";
+
+            List<string> queryParams = new List<string>();
+
+            if(Region != null)
+            {
+                var regionStringValues = Region.Select(v => v.ToString()).ToList();
+                queryParams = AddParamsToQueryParams(queryParams, "region", regionStringValues, "form", true);
+            }
+            if(Fleet != null)
+            {
+                var fleetStringValues = Fleet.Select(v => v.ToString()).ToList();
+                queryParams = AddParamsToQueryParams(queryParams, "fleet", fleetStringValues, "form", true);
             }
             if (queryParams.Count > 0)
             {
