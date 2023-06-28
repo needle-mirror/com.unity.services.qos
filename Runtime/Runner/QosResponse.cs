@@ -58,7 +58,7 @@ namespace Unity.Networking.QoS
         {
 #if UGS_QOS_SUPPORTED
             Binding.Baselib_Socket_Message message = new Binding.Baselib_Socket_Message();
-            var buffer = new UnsafeAppendBuffer(50, 16, Allocator.Persistent);
+            var buffer = new UnsafeAppendBuffer(2048, 16, Allocator.Persistent);
             var startTime = DateTime.UtcNow;
             fixed(Binding.Baselib_NetworkAddress* pEndpointAddress = &endPoint.rawNetworkAddress)
             {
@@ -102,12 +102,7 @@ namespace Unity.Networking.QoS
 
                 endPoint.rawNetworkAddress = *message.address;
                 m_PacketLength = (ushort)message.dataLen;
-
-                m_Magic = Marshal.ReadByte(message.data);
-                m_VerAndFlow = Marshal.ReadByte(message.data, 1);
-                m_Sequence = Marshal.ReadByte(message.data, 2);
-                m_Identifier = (ushort)Marshal.ReadInt16(message.data, 3);
-                m_Timestamp = (ulong)Marshal.ReadInt64(message.data, 5);
+                Deserialize(message.data);
 
                 m_LatencyMs = (Length >= MinPacketLen)
                     ? (int)((ulong)(DateTime.UtcNow.Ticks / TimeSpan.TicksPerMillisecond) - m_Timestamp)
@@ -119,6 +114,30 @@ namespace Unity.Networking.QoS
 #else
             throw new NotImplementedException();
 #endif
+        }
+
+        internal void Deserialize(IntPtr msgData)
+        {
+            m_Magic = Marshal.ReadByte(msgData);
+            m_VerAndFlow = Marshal.ReadByte(msgData, 1);
+            m_Sequence = Marshal.ReadByte(msgData, 2);
+
+            // m_Identifier = (ushort)Marshal.ReadInt16(msgData, 3);
+            var id1 = (ushort)(Marshal.ReadByte(msgData, 3) << 0);
+            var id2 = (ushort)(Marshal.ReadByte(msgData, 4) << 8);
+            m_Identifier = (ushort)(id1 + id2);
+
+
+            // m_Timestamp = (ulong)Marshal.ReadInt64(msgData, 5);
+            var ts1 = ((ulong)Marshal.ReadByte(msgData,  5)) <<  0;
+            var ts2 = ((ulong)Marshal.ReadByte(msgData,  6)) <<  8;
+            var ts3 = ((ulong)Marshal.ReadByte(msgData,  7)) << 16;
+            var ts4 = ((ulong)Marshal.ReadByte(msgData,  8)) << 24;
+            var ts5 = ((ulong)Marshal.ReadByte(msgData,  9)) << 32;
+            var ts6 = ((ulong)Marshal.ReadByte(msgData, 10)) << 40;
+            var ts7 = ((ulong)Marshal.ReadByte(msgData, 11)) << 48;
+            var ts8 = ((ulong)Marshal.ReadByte(msgData, 12)) << 56;
+            m_Timestamp = ts1 + ts2 + ts3 + ts4 + ts5 + ts6 + ts7 + ts8;
         }
 
         /// <summary>

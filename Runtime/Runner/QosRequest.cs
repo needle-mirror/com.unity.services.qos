@@ -97,20 +97,7 @@ namespace Unity.Networking.QoS
             // No byte swizzling here since the required fields are one byte (or arrays of bytes), and the
             // custom data is reflected back to us in the same format it was sent.
 
-            // The maximum packet size is 1500, we want to make sure we reserve enough space for the buffer.
-            // Calculate the next nearest power of two for the buffer capacity
-            var bufferCapacity = (int)Math.Pow(2, (int)Math.Log(m_PacketLength - 1, 2) + 1);
-            var buffer = new UnsafeAppendBuffer(bufferCapacity, 16, Allocator.TempJob);
-            buffer.Add(m_Magic);
-            buffer.Add(m_VerAndFlow);
-            buffer.Add(m_TitleLen);
-            for (var i = 0; i < m_TitleLen - 1; i++)
-            {
-                buffer.Add(m_Title[i]);
-            }
-            buffer.Add(m_Sequence);
-            buffer.Add(m_Identifier);
-            buffer.Add(m_Timestamp);
+            var buffer = Serialize();
 
             var dataLen = (uint)buffer.Length;
 
@@ -134,6 +121,47 @@ namespace Unity.Networking.QoS
 #else
             throw new NotImplementedException();
 #endif
+        }
+
+        internal UnsafeAppendBuffer Serialize()
+        {
+            // The maximum packet size is 1500. A capacity of 2048 is certain to be enough.
+            var bufferCapacity = 2048;
+            var buffer = new UnsafeAppendBuffer(bufferCapacity, 16, Allocator.TempJob);
+            buffer.Add(m_Magic);
+            buffer.Add(m_VerAndFlow);
+            buffer.Add(m_TitleLen);
+            for (var i = 0; i < m_TitleLen - 1; i++)
+            {
+                buffer.Add(m_Title[i]);
+            }
+
+            buffer.Add(m_Sequence);
+
+            // Add m_Identifier (ushort) = 16 bits
+            byte id1 = (byte)((m_Identifier & 0x00FF) >> 0);
+            byte id2 = (byte)((m_Identifier & 0xFF00) >> 8);
+            buffer.Add(id1);
+            buffer.Add(id2);
+
+            // Add m_Timestamp (ulong) = 64 bits
+            byte ts1 = (byte)((m_Timestamp & 0x00000000000000FF) >> 0);
+            byte ts2 = (byte)((m_Timestamp & 0x000000000000FF00) >> 8);
+            byte ts3 = (byte)((m_Timestamp & 0x0000000000FF0000) >> 16);
+            byte ts4 = (byte)((m_Timestamp & 0x00000000FF000000) >> 24);
+            byte ts5 = (byte)((m_Timestamp & 0x000000FF00000000) >> 32);
+            byte ts6 = (byte)((m_Timestamp & 0x0000FF0000000000) >> 40);
+            byte ts7 = (byte)((m_Timestamp & 0x00FF000000000000) >> 48);
+            byte ts8 = (byte)((m_Timestamp & 0xFF00000000000000) >> 56);
+            buffer.Add(ts1);
+            buffer.Add(ts2);
+            buffer.Add(ts3);
+            buffer.Add(ts4);
+            buffer.Add(ts5);
+            buffer.Add(ts6);
+            buffer.Add(ts7);
+            buffer.Add(ts8);
+            return buffer;
         }
     }
 }
