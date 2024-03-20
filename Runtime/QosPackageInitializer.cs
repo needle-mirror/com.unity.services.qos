@@ -1,65 +1,87 @@
-using UnityEngine;
 using System.Threading.Tasks;
 using Unity.Services.Authentication.Internal;
+using Unity.Services.Core.Configuration.Internal;
 using Unity.Services.Core.Internal;
 using Unity.Services.Core.Telemetry.Internal;
 using Unity.Services.Qos.Apis.QosDiscovery;
-
 using Unity.Services.Qos.Http;
 using Unity.Services.Qos.Internal;
 using Unity.Services.Qos.Runner;
-using Unity.Services.Core.Configuration.Internal;
+using UnityEngine;
 
 namespace Unity.Services.Qos
 {
-    class QosPackageInitializer : IInitializablePackage
+    class QosPackageInitializer : IInitializablePackageV2
     {
-        const string PackageName = "com.unity.services.qos";
         const string k_CloudEnvironmentKey = "com.unity.services.core.cloud-environment";
+        const string k_PackageName = "com.unity.services.qos";
         const string k_StagingEnvironment = "staging";
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
-        static void Register()
+        internal static void InitializeOnLoad()
         {
-            var package = new QosPackageInitializer();
-            package.Register(CoreRegistry.Instance);
+            var initializer = new QosPackageInitializer();
+            initializer.Register(CorePackageRegistry.Instance);
         }
 
-        /// <summary>
-        /// A helper method to easily register the package with all its dependencies/provisions to a given registry.
-        /// </summary>
-        /// <param name="registry">
-        /// The registry to register your package to.
-        /// </param>
+        public void Register(CorePackageRegistry registry)
+        {
+            registry.Register(this)
+                .DependsOn<IAccessToken>()
+                .DependsOn<IMetricsFactory>()
+                .DependsOn<IProjectConfiguration>()
+                .ProvidesComponent<IQosResults>()
+                .ProvidesComponent<IQosServiceComponent>();
+        }
+
         internal void Register(CoreRegistry registry)
         {
-            // Pass an instance of this class to Core
             registry.RegisterPackage(this)
                 .DependsOn<IAccessToken>()
                 .DependsOn<IMetricsFactory>()
                 .DependsOn<IProjectConfiguration>()
-                .ProvidesComponent<IQosResults>();
+                .ProvidesComponent<IQosResults>()
+                .ProvidesComponent<IQosServiceComponent>();
         }
 
         public Task Initialize(CoreRegistry registry)
         {
+            QosService.Instance = InitializeService(registry);
+            return Task.CompletedTask;
+        }
+
+        public Task InitializeInstanceAsync(CoreRegistry registry)
+        {
+            InitializeService(registry);
+            return Task.CompletedTask;
+        }
+
+        IQosService InitializeService(CoreRegistry registry)
+        {
             var projectConfiguration = registry.GetServiceComponent<IProjectConfiguration>();
-            var httpClient = new HttpClient();
 
             var accessTokenQosDiscovery = registry.GetServiceComponent<IAccessToken>();
             var metricsFactory = registry.GetServiceComponent<IMetricsFactory>();
-            var metrics = metricsFactory.Create(PackageName);
+            var metrics = metricsFactory.Create(k_PackageName);
+
+            var httpClient = new HttpClient();
 
             // Set up internal QoS Discovery API client & config
-            QosDiscoveryService.Instance = new InternalQosDiscoveryService(GetHost(projectConfiguration), httpClient, accessTokenQosDiscovery);
+            var internalQosService = new InternalQosDiscoveryService(GetHost(projectConfiguration), httpClient, accessTokenQosDiscovery);
+
+            var httpClientV2 = new V2.Http.HttpClient();
+            var v2Config = new V2.Configuration(basePath: GetHost(projectConfiguration), requestTimeout: 10, numRetries: 4, headers: null);
+            var qosDiscoveryApiClientV2 = new V2.Apis.QosDiscovery.QosDiscoveryApiClient(httpClientV2, accessTokenQosDiscovery, v2Config);
 
             // Set up public QoS interface
-            var wrappedQosService = new WrappedQosService(QosDiscoveryService.Instance.QosDiscoveryApi,
+            var wrappedQosService = new WrappedQosService(internalQosService.QosDiscoveryApi, qosDiscoveryApiClientV2,
                 new BaselibQosRunner(), accessTokenQosDiscovery, metrics);
-            QosService.Instance = wrappedQosService;
-            registry.RegisterServiceComponent<IQosResults>(new QosResults(wrappedQosService));
 
-            return Task.CompletedTask;
+            registry.RegisterService<IQosService>(wrappedQosService);
+            registry.RegisterServiceComponent<IQosResults>(new QosResults(wrappedQosService));
+            registry.RegisterServiceComponent<IQosServiceComponent>(new QosServiceComponent(wrappedQosService));
+
+            return wrappedQosService;
         }
 
         string GetHost(IProjectConfiguration projectConfiguration)
@@ -79,7 +101,7 @@ namespace Unity.Services.Qos
     /// <summary>
     /// InternalQosDiscoveryService
     /// </summary>
-    class InternalQosDiscoveryService : IQosDiscoveryService
+    class InternalQosDiscoveryService
     {
         const int RequestTimeout = 10;
         const int NumRetries = 4;

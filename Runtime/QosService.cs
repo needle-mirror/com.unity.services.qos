@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
@@ -93,6 +94,31 @@ namespace Unity.Services.Qos
         /// in the regions of the fleet for measurements. At least one fleet ID must be passed</param>
         /// <returns>Returns the sorted list of QoS results, ordered from best to worst.</returns>
         Task<IList<IQosAnnotatedResult>> GetSortedMultiplayQosResultsAsync(IList<string> fleet);
+
+        /// <summary>
+        /// Query for all QoS servers associated with the authenticated player's projectID & environmentID.
+        /// </summary>
+        /// <remarks>
+        /// This endpoint returns a list of QoS server connection information, annotated with service-specific tags,
+        /// that you can use to determine connection quality between a client and a given region. The annotations in the
+        /// response can be used to filter out servers that are irrelevant to certain use-cases (e.g. filtering for
+        /// Multiplay-only or Relay-only, by Matchmaker queue or fleet, etc.)
+        /// </remarks>
+        Task<IList<V2.Models.QosServer>> GetAllServersAsync();
+
+        /// <summary>
+        /// Gets the QoS measurements associated with each given servers.
+        /// </summary>
+        /// <remarks>
+        /// No sorting or grouping is done. An empty list will be returned if one of the server is invalid.
+        /// </remarks>
+        Task<IList<(V2.Models.QosServer, IQosMeasurements)>> GetQosResultsAsync(IList<V2.Models.QosServer> servers);
+    }
+
+    public interface IQosMeasurements
+    {
+        public int AverageLatencyMs { get; }
+        public float PacketLossPercent { get; }
     }
 
     /// <summary>

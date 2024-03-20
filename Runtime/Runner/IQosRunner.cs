@@ -11,5 +11,6 @@ namespace Unity.Services.Qos.Runner
 
         // Returning a List for simpler sorting (IList doesn't have a Sort method)
         Task<List<QosAnnotatedResult>> MeasureQosAsync(IList<QosServiceServer> servers);
+        Task<List<(V2.Models.QosServer, IQosMeasurements)>> MeasureQosV2Async(IList<V2.Models.QosServer> servers);
     }
 }

@@ -123,6 +123,7 @@ namespace Unity.Networking.QoS
 #endif
         }
 
+#if UGS_QOS_SUPPORTED
         internal UnsafeAppendBuffer Serialize()
         {
             // The maximum packet size is 1500. A capacity of 2048 is certain to be enough.
@@ -138,15 +139,19 @@ namespace Unity.Networking.QoS
 
             buffer.Add(m_Sequence);
 
+            // Writing multiple bytes at a time to an AppendBuffer was causing a crash due to memory misalignement on Android.
+            // The code below is a workaround that does the same thing Add(ushort) should have done, but one byte at a time.
             // Add m_Identifier (ushort) = 16 bits
             byte id1 = (byte)((m_Identifier & 0x00FF) >> 0);
             byte id2 = (byte)((m_Identifier & 0xFF00) >> 8);
             buffer.Add(id1);
             buffer.Add(id2);
 
+            // Writing multiple bytes at a time to an AppendBuffer was causing a crash due to memory misalignement on Android.
+            // The code below is a workaround that does the same thing Add(ulong) should have done, but one byte at a time.
             // Add m_Timestamp (ulong) = 64 bits
-            byte ts1 = (byte)((m_Timestamp & 0x00000000000000FF) >> 0);
-            byte ts2 = (byte)((m_Timestamp & 0x000000000000FF00) >> 8);
+            byte ts1 = (byte)((m_Timestamp & 0x00000000000000FF) >>  0);
+            byte ts2 = (byte)((m_Timestamp & 0x000000000000FF00) >>  8);
             byte ts3 = (byte)((m_Timestamp & 0x0000000000FF0000) >> 16);
             byte ts4 = (byte)((m_Timestamp & 0x00000000FF000000) >> 24);
             byte ts5 = (byte)((m_Timestamp & 0x000000FF00000000) >> 32);
@@ -163,5 +168,6 @@ namespace Unity.Networking.QoS
             buffer.Add(ts8);
             return buffer;
         }
+#endif
     }
 }

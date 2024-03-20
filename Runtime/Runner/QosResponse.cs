@@ -118,16 +118,21 @@ namespace Unity.Networking.QoS
 
         internal void Deserialize(IntPtr msgData)
         {
+#if UGS_QOS_SUPPORTED
             m_Magic = Marshal.ReadByte(msgData);
             m_VerAndFlow = Marshal.ReadByte(msgData, 1);
             m_Sequence = Marshal.ReadByte(msgData, 2);
 
+            // Reading multiple bytes at a time from an AppendBuffer was causing a crash due to memory misalignement on Android.
+            // The code below is a workaround that does the same thing ReadInt16 should have done, but one byte at a time.
             // m_Identifier = (ushort)Marshal.ReadInt16(msgData, 3);
             var id1 = (ushort)(Marshal.ReadByte(msgData, 3) << 0);
             var id2 = (ushort)(Marshal.ReadByte(msgData, 4) << 8);
             m_Identifier = (ushort)(id1 + id2);
 
 
+            // Reading multiple bytes at a time from an AppendBuffer was causing a crash due to memory misalignement on Android.
+            // The code below is a workaround that does the same thing ReadInt64 should have done, but one byte at a time.
             // m_Timestamp = (ulong)Marshal.ReadInt64(msgData, 5);
             var ts1 = ((ulong)Marshal.ReadByte(msgData,  5)) <<  0;
             var ts2 = ((ulong)Marshal.ReadByte(msgData,  6)) <<  8;
@@ -138,6 +143,9 @@ namespace Unity.Networking.QoS
             var ts7 = ((ulong)Marshal.ReadByte(msgData, 11)) << 48;
             var ts8 = ((ulong)Marshal.ReadByte(msgData, 12)) << 56;
             m_Timestamp = ts1 + ts2 + ts3 + ts4 + ts5 + ts6 + ts7 + ts8;
+#else
+            throw new NotImplementedException();
+#endif
         }
 
         /// <summary>

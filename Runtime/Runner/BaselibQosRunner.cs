@@ -71,6 +71,31 @@ namespace Unity.Services.Qos.Runner
             return results;
         }
 
+        internal struct QosMeasurementImpl : IQosMeasurements
+        {
+            public QosMeasurementImpl(int averageLatencyMs, float packetLossPercent)
+            {
+                AverageLatencyMs = averageLatencyMs;
+                PacketLossPercent = packetLossPercent;
+            }
+
+            public int AverageLatencyMs { get;  }
+            public float PacketLossPercent { get; }
+        }
+
+        public async Task<List<(V2.Models.QosServer, IQosMeasurements)>> MeasureQosV2Async(IList<V2.Models.QosServer> servers)
+        {
+            var v1 = servers.ToList().ConvertAll(q => new QosServer(q.Endpoints, "unused"));
+            var results = await MeasureQosAsync(v1);
+            var output = new List<(V2.Models.QosServer, IQosMeasurements)>(capacity: results.Count);
+            if (results.Count == 0 || results.Count != servers.Count) return output;  // something went wrong.
+            var convertedResults = results.ConvertAll(qr => new QosMeasurementImpl(qr.AverageLatencyMs, qr.PacketLossPercent));
+            for (var i = 0; i < servers.Count; i++)
+                output.Add((servers[i], convertedResults[i]));
+
+            return output;
+        }
+
         async Task<IQosJob> RunQosJob(List<UcgQosServer> convertedServers)
         {
             var title = "QoS request";

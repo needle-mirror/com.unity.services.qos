@@ -1,13 +1,16 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
+using System.Threading;
 using System.Threading.Tasks;
 using Unity.Services.Authentication.Internal;
 using Unity.Services.Core.Telemetry.Internal;
 using Unity.Services.Qos.Apis.QosDiscovery;
 using Unity.Services.Qos.QosDiscovery;
 using Unity.Services.Qos.Runner;
-using UnityEngine;
+using Unity.Services.Qos.V2.Models;
+using Unity.Services.Qos.V2.QosDiscovery;
 
 namespace Unity.Services.Qos
 {
@@ -24,17 +27,23 @@ namespace Unity.Services.Qos
         const string MetricClientBestResultLabelTrueValue = "true";
 
         IQosDiscoveryApiClient _qosDiscoveryApiClient;
+        V2.Apis.QosDiscovery.IQosDiscoveryApiClient _qosDiscoveryApiClientV2;
 
         IQosRunner _qosRunner;
 
         IAccessToken _accessToken;
 
         IMetrics _metrics;
+        string _latestCountryForTelemetry;
+        string _latestRegionForTelemetry;
+        string _getAllServersEtag = "";
+        IList<QosServer> _getAllServersCached;
 
-        internal WrappedQosService(IQosDiscoveryApiClient qosDiscoveryApiClient, IQosRunner qosRunner,
+        internal WrappedQosService(IQosDiscoveryApiClient qosDiscoveryApiClient, V2.Apis.QosDiscovery.IQosDiscoveryApiClient qosDiscoveryApiClientV2, IQosRunner qosRunner,
                                    IAccessToken accessToken, IMetrics metrics)
         {
             _qosDiscoveryApiClient = qosDiscoveryApiClient;
+            _qosDiscoveryApiClientV2 = qosDiscoveryApiClientV2;
             _qosRunner = qosRunner;
             _accessToken = accessToken;
             _metrics = metrics;
@@ -153,6 +162,68 @@ namespace Unity.Services.Qos
                 fleet);
         }
 
+        // GetAllServersAsync is not safe to run concurrently with GetQosResultsAsync or with itself.
+        public async Task<IList<QosServer>> GetAllServersAsync()
+        {
+            var rq = new GetAllServersRequest();
+
+            var headers = new Dictionary<string, string>();
+            if (!string.IsNullOrEmpty(_getAllServersEtag))
+                headers.Add("If-None-Match", _getAllServersEtag);
+            var cfg = new V2.Configuration(null, null, null, headers);
+
+            try
+            {
+                var httpResp = await _qosDiscoveryApiClientV2.GetAllServersAsync(rq, cfg);
+                httpResp.Headers.TryGetValue("ETag", out _getAllServersEtag);
+                _getAllServersCached = httpResp.Result.Data.Servers;
+                httpResp.Headers.TryGetValue("X-Client-Country", out _latestCountryForTelemetry);
+                httpResp.Headers.TryGetValue("X-Client-Region", out _latestRegionForTelemetry);
+            }
+            catch (V2.Http.HttpException ex)
+            {
+                if ((long)HttpStatusCode.NotModified == ex.Response.StatusCode)
+                    return _getAllServersCached;
+                throw;
+            }
+
+            return _getAllServersCached;
+        }
+
+        // GetQosResultsAsync is not safe to run concurrently with GetAllServersAsync.
+        public async Task<IList<(QosServer, IQosMeasurements)>> GetQosResultsAsync(IList<QosServer> servers)
+        {
+            var qosResults = await _qosRunner.MeasureQosV2Async(servers);
+            SendResultsMetricsV2(qosResults);
+            return qosResults;
+        }
+
+        void SendResultsMetricsV2(IReadOnlyCollection<(QosServer, IQosMeasurements)> qosResults)
+        {
+            SendResultsMetricsV2ForService(qosResults, qs => qs.Annotations.RelayRegionId, "relay");
+            SendResultsMetricsV2ForService(qosResults, qs => qs.Annotations.MultiplayRegionId, "multiplay");
+        }
+
+        void SendResultsMetricsV2ForService(IReadOnlyCollection<(QosServer, IQosMeasurements)> allResults,
+            Func<QosServer, List<string>> regionGetter, string service)
+        {
+            // the list is ordered only to get a rough idea of which server is the best.
+            var results = allResults.Where(t => regionGetter(t.Item1) != null && regionGetter(t.Item1).Count > 0)
+                .OrderBy(t => t.Item2.AverageLatencyMs)
+                .ThenBy(t => t.Item2.PacketLossPercent).ToList();
+            for (var i = 0; i < results.Count; i++)
+            {
+                var result = results[i];
+                SendResultMetrics(service,
+                    _latestCountryForTelemetry,
+                    _latestRegionForTelemetry,
+                    regionGetter(result.Item1)[0],  // this code assumes that a server has no more than one region.
+                    result.Item2.AverageLatencyMs,
+                    result.Item2.PacketLossPercent,
+                    i == 0);
+            }
+        }
+
         internal async Task<IList<IQosAnnotatedResult>> GetSortedInternalServiceQosResultsAsync(string service,
             IList<string> regions, IList<string> fleet)
         {
@@ -225,58 +296,47 @@ namespace Unity.Services.Qos
 
         void SendResultsMetrics(IList<Internal.QosResult> sortedResults, string service, Response discoveryResponse)
         {
-            // don't send metrics in the rare case that there are no results
-            if (sortedResults.Count == 0)
-            {
-                return;
-            }
+            discoveryResponse.Headers.TryGetValue("X-Client-Country", out var clientCountry);
+            discoveryResponse.Headers.TryGetValue("X-Client-Region", out var clientRegion);
 
             for (var index = 0; index < sortedResults.Count; index++)
             {
                 var result = sortedResults[index];
-                SendResultMetrics(service, discoveryResponse, result.Region, result.AverageLatencyMs,
+                SendResultMetrics(service, clientCountry, clientRegion, result.Region, result.AverageLatencyMs,
                     result.PacketLossPercent, index == 0);
             }
         }
 
         void SendResultsMetrics(IList<IQosResult> sortedResults, string service, Response discoveryResponse)
         {
-            // don't send metrics in the rare case that there are no results
-            if (sortedResults.Count == 0)
-            {
-                return;
-            }
+            discoveryResponse.Headers.TryGetValue("X-Client-Country", out var clientCountry);
+            discoveryResponse.Headers.TryGetValue("X-Client-Region", out var clientRegion);
 
             for (var index = 0; index < sortedResults.Count; index++)
             {
                 var result = sortedResults[index];
-                SendResultMetrics(service, discoveryResponse, result.Region, result.AverageLatencyMs,
+                SendResultMetrics(service, clientCountry, clientRegion, result.Region, result.AverageLatencyMs,
                     result.PacketLossPercent, index == 0);
             }
         }
 
-        void SendResultMetrics(string service, Response discoveryResponse, string region, int averageLatencyMs,
+        void SendResultMetrics(string service, string clientCountry, string clientRegion, string region, int averageLatencyMs,
             float packetLossPercent, bool isBest)
         {
             IDictionary<string, string> metricTags = new Dictionary<string, string>();
 
             metricTags.Add(MetricServiceNameLabelName, service);
             metricTags.Add(MetricServiceRegionLabelName, region);
-            if (discoveryResponse.Headers.TryGetValue("X-Client-Country", out var clientCountry))
-            {
-                metricTags.Add(MetricClientCountryLabelName, clientCountry);
-            }
 
-            if (discoveryResponse.Headers.TryGetValue("X-Client-Region", out var clientRegion))
-            {
+            if (!string.IsNullOrEmpty(clientCountry))
+                metricTags.Add(MetricClientCountryLabelName, clientCountry);
+
+            if (!string.IsNullOrEmpty(clientRegion))
                 metricTags.Add(MetricClientRegionLabelName, clientRegion);
-            }
 
             // only add the "best_result" tag when processing the first (best) result
             if (isBest)
-            {
                 metricTags.Add(MetricClientBestResultLabelName, MetricClientBestResultLabelTrueValue);
-            }
 
             _metrics.SendHistogramMetric(ResultLatencyMetricName, averageLatencyMs, metricTags);
             _metrics.SendHistogramMetric(ResultPacketLossMetricName, packetLossPercent, metricTags);
