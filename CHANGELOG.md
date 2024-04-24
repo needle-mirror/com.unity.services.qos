@@ -5,6 +5,12 @@ All notable changes to this package will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [1.3.2] - 2024-04-24
+### Changed
+- Apple Privacy Manifest
+- Updated com.unity.services.core to 1.12.5
+- Updated com.unity.services.authentication to 2.7.4
+
 
 ## [1.3.0] - 2024-03-20
 
