@@ -96,7 +96,7 @@ namespace Unity.Services.Qos
         Task<IList<IQosAnnotatedResult>> GetSortedMultiplayQosResultsAsync(IList<string> fleet);
 
         /// <summary>
-        /// Query for all QoS servers associated with the authenticated player's projectID & environmentID.
+        /// Query for all QoS servers associated with the authenticated player's projectID and environmentID.
         /// </summary>
         /// <remarks>
         /// This endpoint returns a list of QoS server connection information, annotated with service-specific tags,
@@ -104,6 +104,7 @@ namespace Unity.Services.Qos
         /// response can be used to filter out servers that are irrelevant to certain use-cases (e.g. filtering for
         /// Multiplay-only or Relay-only, by Matchmaker queue or fleet, etc.)
         /// </remarks>
+        /// <returns>Returns a list of tuples, each containing the input server and its corresponding QoS measurements.</returns>
         Task<IList<V2.Models.QosServer>> GetAllServersAsync();
 
         /// <summary>
@@ -112,12 +113,26 @@ namespace Unity.Services.Qos
         /// <remarks>
         /// No sorting or grouping is done. An empty list will be returned if one of the server is invalid.
         /// </remarks>
+        /// <param name="servers">The list of QoS servers to measure.</param>
+        /// <returns>Returns a list of tuples, each containing the input server and its corresponding QoS measurements.</returns>
         Task<IList<(V2.Models.QosServer, IQosMeasurements)>> GetQosResultsAsync(IList<V2.Models.QosServer> servers);
     }
 
+    /// <summary>
+    /// Represents raw QoS measurement data collected for communication with a server.
+    /// </summary>
     public interface IQosMeasurements
     {
+        /// <summary>
+        /// Average latency of QoS measurements to the region.
+        /// </summary>
+        /// <value>A positive integer, in milliseconds.</value>
         public int AverageLatencyMs { get; }
+
+        /// <summary>
+        /// Fraction of packets that did not receive a response from the server.
+        /// </summary>
+        /// <value>A float in the range 0.0f to 1.0f (0% to 100%).</value>
         public float PacketLossPercent { get; }
     }
 

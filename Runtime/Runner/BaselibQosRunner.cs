@@ -115,61 +115,78 @@ namespace Unity.Services.Qos.Runner
         // Helper method to covert a Discovery service QoS server model to the UCG QoS package server model.
         // the main difference is the 'address' and 'port' fields vs a 'endpoint' field.
         // If the 'endpoint' field cannot be parsed, this will return a null struct.
-        async Task<UcgQosServer?> ToUcgFormat(QosServer server)
+        Task<UcgQosServer?> ToUcgFormat(QosServer server)
         {
             var serverEndpoint = server.Endpoints[0];
             var serverRegion = server.Region;
-            return await ToUcgFormat(serverEndpoint, serverRegion);
+            return ToUcgFormat(serverEndpoint, serverRegion);
         }
 
-        async Task<UcgQosServer?> ToUcgFormat(QosServiceServer server)
+        Task<UcgQosServer?> ToUcgFormat(QosServiceServer server)
         {
             var serverEndpoint = server.Endpoints[0];
             var serverRegion = server.Region;
-            return await ToUcgFormat(serverEndpoint, serverRegion);
+            return ToUcgFormat(serverEndpoint, serverRegion);
         }
 
-        async Task<UcgQosServer?> ToUcgFormat(string serverEndpoint, string serverRegion)
+        Task<UcgQosServer?> ToUcgFormat(string serverEndpoint, string serverRegion)
         {
             if (!Uri.TryCreate($"udp://{serverEndpoint}", UriKind.Absolute, out var uri))
             {
-                Debug.LogError($"Could not create address from endpoint: '{serverEndpoint}'");
-                return null;
+                Debug.LogError($"Could not create address from endpoint: '{serverEndpoint}'.");
+                return Task.FromResult<UcgQosServer?>(null);
             }
 
             if (uri.Port == -1)
             {
-                Debug.LogError($"Missing or invalid port in endpoint: '{serverEndpoint}'");
-                return null;
+                Debug.LogError($"Missing or invalid port in endpoint: '{serverEndpoint}'.");
+                return Task.FromResult<UcgQosServer?>(null);
             }
 
-            // If uri.Host is an IP, Dns.GetHostAddressesAsync will just use the address instead of attempting to resolve
-            var resolvedIps = await _dnsResolver(uri.Host);
-            if (resolvedIps.Length == 0)
+            return MakeUcgQosServer();
+
+            async Task<UcgQosServer?> MakeUcgQosServer()
             {
-                Debug.LogError($"No addresses could be resolved for host {uri.Host}");
-                return null;
+                // If uri.Host is an IP, Dns.GetHostAddressesAsync will just use
+                // the address instead of attempting to resolve.
+                var resolvedIps = await _dnsResolver(uri.Host);
+                if (resolvedIps.Length == 0)
+                {
+                    Debug.LogError($"No addresses could be resolved for host {uri.Host}.");
+                    return null;
+                }
+                var ip = GetIpAddress(resolvedIps);
+
+                return new UcgQosServer
+                {
+                    regionid = serverRegion,
+                    ipv4 = ip.AddressFamily == AddressFamily.InterNetwork ? ip.ToString() : null,
+                    ipv6 = ip.AddressFamily == AddressFamily.InterNetworkV6 ? ip.ToString() : null,
+                    port = Convert.ToUInt16(uri.Port),
+                    BackoffUntilUtc = default
+                };
             }
 
-            // Choose first IP from list
-            // TODO: we could eventually provide ability to select IPv4/IPv6 specifically
-            var ip = resolvedIps[0];
-
-            var ucgServer = new UcgQosServer
+            static IPAddress GetIpAddress(in ReadOnlySpan<IPAddress> resolvedIps)
             {
-                regionid = serverRegion, ipv6 = null, port = Convert.ToUInt16(uri.Port), BackoffUntilUtc = default
-            };
+#if UNITY_SWITCH || UNITY_PS4 || UNITY_PS5
+                // On platforms that do not support IPv6, we take the first IPv4
+                // address from the list of resolved IPs.
+                foreach (var ipAddress in resolvedIps)
+                {
+                    if (ipAddress.AddressFamily == AddressFamily.InterNetwork)
+                    {
+                        return ipAddress;
+                    }
+                }
 
-            if (ip.AddressFamily == AddressFamily.InterNetwork) // IPv4
-            {
-                ucgServer.ipv4 = ip.ToString();
+                return IPAddress.None;
+#else
+                // Choose first IP from list.
+                // TODO: we could eventually provide ability to select IPv4/IPv6 specifically.
+                return resolvedIps[0];
+#endif
             }
-            else if (ip.AddressFamily == AddressFamily.InterNetworkV6) // IPv6
-            {
-                ucgServer.ipv6 = ip.ToString();
-            }
-
-            return ucgServer;
         }
 
         static List<Internal.QosResult> ParseResults(IEnumerable<InternalQosResult> ucgResults,

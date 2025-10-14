@@ -1,5 +1,5 @@
 system: jira
 server: jira.unity3d.com
-project: MPR
+project: MTTB
 issuetype: Bug
-component: qos-sdk
+package: UGS-QoS
