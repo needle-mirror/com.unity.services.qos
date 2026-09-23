@@ -33,7 +33,7 @@ namespace Unity.Services.Qos
     {
         public System.Threading.Tasks.Task<System.Collections.Generic.IList<V2.Models.QosServer>> GetAllServersAsync();
         public System.Threading.Tasks.Task<System.Collections.Generic.IList<System.ValueTuple<V2.Models.QosServer, IQosMeasurements>>> GetQosResultsAsync(System.Collections.Generic.IList<V2.Models.QosServer> servers);
-        public System.Threading.Tasks.Task<System.Collections.Generic.IList<IQosAnnotatedResult>> GetSortedMultiplayQosResultsAsync(System.Collections.Generic.IList<string> fleet);
+        [System.Obsolete(@"Multiplay specific QoS server discovery is deprecated and will not be supported in the future")] public System.Threading.Tasks.Task<System.Collections.Generic.IList<IQosAnnotatedResult>> GetSortedMultiplayQosResultsAsync(System.Collections.Generic.IList<string> fleet);
         public System.Threading.Tasks.Task<System.Collections.Generic.IList<IQosResult>> GetSortedQosResultsAsync(string service, System.Collections.Generic.IList<string> regions);
         public System.Threading.Tasks.Task<System.Collections.Generic.IList<IQosAnnotatedResult>> GetSortedRelayQosResultsAsync(System.Collections.Generic.IList<string> regions);
     }

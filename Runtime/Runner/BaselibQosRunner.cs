@@ -6,7 +6,6 @@ using System.Net.Sockets;
 using System.Threading.Tasks;
 using Unity.Networking.QoS;
 using Unity.Services.Qos.Models;
-using Debug = UnityEngine.Debug;
 
 namespace Unity.Services.Qos.Runner
 {
@@ -133,13 +132,13 @@ namespace Unity.Services.Qos.Runner
         {
             if (!Uri.TryCreate($"udp://{serverEndpoint}", UriKind.Absolute, out var uri))
             {
-                Debug.LogError($"Could not create address from endpoint: '{serverEndpoint}'.");
+                Logger.LogError($"Could not create address from endpoint: '{serverEndpoint}'.");
                 return Task.FromResult<UcgQosServer?>(null);
             }
 
             if (uri.Port == -1)
             {
-                Debug.LogError($"Missing or invalid port in endpoint: '{serverEndpoint}'.");
+                Logger.LogError($"Missing or invalid port in endpoint: '{serverEndpoint}'.");
                 return Task.FromResult<UcgQosServer?>(null);
             }
 
@@ -152,7 +151,7 @@ namespace Unity.Services.Qos.Runner
                 var resolvedIps = await _dnsResolver(uri.Host);
                 if (resolvedIps.Length == 0)
                 {
-                    Debug.LogError($"No addresses could be resolved for host {uri.Host}.");
+                    Logger.LogError($"No addresses could be resolved for host {uri.Host}.");
                     return null;
                 }
                 var ip = GetIpAddress(resolvedIps);

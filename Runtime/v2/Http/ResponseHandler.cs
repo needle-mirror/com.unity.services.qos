@@ -52,7 +52,7 @@ namespace Unity.Services.Qos.V2.Http
             try
             {
                 var deserializedJson = GetDeserializedJson(response.Data);
-                return IsolatedJsonConvert.DeserializeObject<T>(deserializedJson, settings);
+                return (deserializedJson == null ? default(T) : IsolatedJsonConvert.DeserializeObject<T>(deserializedJson, settings));
             }
             catch(Exception e)
             {
@@ -77,7 +77,8 @@ namespace Unity.Services.Qos.V2.Http
 
             try
             {
-                return IsolatedJsonConvert.DeserializeObject(GetDeserializedJson(response.Data), type, settings);
+                var deserializedJson = GetDeserializedJson(response.Data);
+                return (deserializedJson == null ? null : IsolatedJsonConvert.DeserializeObject(deserializedJson, type, settings));
             }
             catch(Exception e)
             {

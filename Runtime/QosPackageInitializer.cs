@@ -74,8 +74,13 @@ namespace Unity.Services.Qos
             var qosDiscoveryApiClientV2 = new V2.Apis.QosDiscovery.QosDiscoveryApiClient(httpClientV2, accessTokenQosDiscovery, v2Config);
 
             // Set up public QoS interface
+#if UNITY_WEBGL && !UNITY_EDITOR
+            IQosRunner qosRunner = new WebTransportQosRunner();
+#else
+            IQosRunner qosRunner = new BaselibQosRunner();
+#endif
             var wrappedQosService = new WrappedQosService(internalQosService.QosDiscoveryApi, qosDiscoveryApiClientV2,
-                new BaselibQosRunner(), accessTokenQosDiscovery, metrics);
+                qosRunner, accessTokenQosDiscovery, metrics);
 
             registry.RegisterService<IQosService>(wrappedQosService);
             registry.RegisterServiceComponent<IQosResults>(new QosResults(wrappedQosService));

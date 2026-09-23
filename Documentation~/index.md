@@ -8,14 +8,18 @@ measurements in match groupings.
 
 ## Supported versions
 
-The following Unity Editor versions support the QoS SDK:
+The QoS SDK supports Unity 6000.0 and newer. Invoking the measurement APIs in unsupported Unity versions
+will throw an exception.
 
-* 2022.2.0a10+
-* 2022.1.0f1+
-* 2021.3.2f1+
-* 2020.3.34f1+
+## Supported platforms
 
-Invoking the SDK in unsupported Unity versions will throw an exception.
+QoS measurements use UDP on every platform except WebGL. On WebGL, the SDK measures over WebTransport instead, so the
+player must run in a browser that supports WebTransport.
+
+A server that cannot be measured, for example from a browser without WebTransport support, reports an invalid
+measurement of `int.MaxValue` latency and 100% packet loss. `GetSortedRelayQosResultsAsync` and
+`GetSortedMultiplayQosResultsAsync` drop those results. `GetSortedQosResultsAsync` and `GetQosResultsAsync` return
+them, so check the latency and packet loss before treating a result as a usable region.
 
 ## Using the QoS SDK
 

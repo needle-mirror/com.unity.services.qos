@@ -1,7 +1,9 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
+using UnityEngine;
 
 [assembly: InternalsVisibleTo("Unity.Services.Qos.Tests")]
 [assembly: InternalsVisibleTo("DynamicProxyGenAssembly2")]
@@ -31,7 +33,7 @@ namespace Unity.Services.Qos
     ///             {
     ///                 await UnityServices.InitializeAsync();
     ///                 await AuthenticationService.Instance.SignInAnonymouslyAsync();
-    ///                 var serviceName = "multiplay";
+    ///                 var serviceName = "relay";
     ///                 var qosResults = await QosService.Instance.GetSortedQosResultsAsync(serviceName, null);
     ///             }
     ///             catch (Exception e)
@@ -50,6 +52,19 @@ namespace Unity.Services.Qos
         /// A static instance of the QoS Service.
         /// </summary>
         public static IQosService Instance { get; internal set; }
+
+#if UNITY_EDITOR
+        // With Fast Enter Play Mode enabled, static fields are not reset when exiting Play Mode.
+        // So we do it manually with the following method. The instance doesn't really NEED to be
+        // reset in this manner (the package initializer overwrites it on load), but having this
+        // here will ensure we don't trigger any automated checks that might be added to ensure
+        // statics are reset on load. See UUM-131054 for context.
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSplashScreen)]
+        private static void ResetStaticsOnLoad()
+        {
+            Instance = null;
+        }
+#endif
     }
 
     /// <summary>
@@ -86,6 +101,7 @@ namespace Unity.Services.Qos
 
         /// <summary>
         /// Gets sorted QoS measurements for Multiplay service.
+        /// This method is deprecated and may be removed in future versions.
         /// </summary>
         /// <remarks>
         /// The fleet ID must be a valid Multiplay fleet ID.
@@ -93,6 +109,7 @@ namespace Unity.Services.Qos
         /// <param name="fleet">The fleet to query for QoS. `GetSortedMultiplayQosResultsAsync` only uses QoS servers
         /// in the regions of the fleet for measurements. At least one fleet ID must be passed</param>
         /// <returns>Returns the sorted list of QoS results, ordered from best to worst.</returns>
+        [Obsolete("Multiplay specific QoS server discovery is deprecated and will not be supported in the future")]
         Task<IList<IQosAnnotatedResult>> GetSortedMultiplayQosResultsAsync(IList<string> fleet);
 
         /// <summary>
@@ -104,14 +121,16 @@ namespace Unity.Services.Qos
         /// response can be used to filter out servers that are irrelevant to certain use-cases (e.g. filtering for
         /// Multiplay-only or Relay-only, by Matchmaker queue or fleet, etc.)
         /// </remarks>
-        /// <returns>Returns a list of tuples, each containing the input server and its corresponding QoS measurements.</returns>
+        /// <returns>The annotated QoS servers available to the player's project and environment.</returns>
         Task<IList<V2.Models.QosServer>> GetAllServersAsync();
 
         /// <summary>
         /// Gets the QoS measurements associated with each given servers.
         /// </summary>
         /// <remarks>
-        /// No sorting or grouping is done. An empty list will be returned if one of the server is invalid.
+        /// No sorting or grouping is done. An empty list will be returned if one of the server endpoints cannot be
+        /// parsed. A server that could not be measured on the current platform or transport reports an invalid
+        /// measurement (<see cref="int.MaxValue"/> latency and full packet loss) instead of being omitted.
         /// </remarks>
         /// <param name="servers">The list of QoS servers to measure.</param>
         /// <returns>Returns a list of tuples, each containing the input server and its corresponding QoS measurements.</returns>
@@ -126,7 +145,7 @@ namespace Unity.Services.Qos
         /// <summary>
         /// Average latency of QoS measurements to the region.
         /// </summary>
-        /// <value>A positive integer, in milliseconds.</value>
+        /// <value>A non-negative integer, in milliseconds.</value>
         public int AverageLatencyMs { get; }
 
         /// <summary>
@@ -156,7 +175,7 @@ namespace Unity.Services.Qos
         /// then taking the average for all responses received. Only packets for which a response was received are
         /// considered in the calculation.
         /// </remarks>
-        /// <value>A positive integer, in milliseconds.</value>
+        /// <value>A non-negative integer, in milliseconds.</value>
         public int AverageLatencyMs { get; }
 
         /// <summary>

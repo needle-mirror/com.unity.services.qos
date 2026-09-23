@@ -52,7 +52,7 @@ namespace Unity.Services.Qos.V2.Apis.QosDiscovery
                 // We return a merge between the current configuration and the
                 // global configuration to ensure we have the correct
                 // combination of headers and a base path (if it is set).
-                Configuration globalConfiguration = new Configuration("http://localhost", 10, 4, null);
+                Configuration globalConfiguration = new Configuration("https://qos-discovery.services.api.unity.com", 10, 4, null);
                 return Configuration.MergeConfigurations(_configuration, globalConfiguration);
             }
             set { _configuration = value; }

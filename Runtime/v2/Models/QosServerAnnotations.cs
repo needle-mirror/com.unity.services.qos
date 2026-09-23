@@ -33,11 +33,11 @@ namespace Unity.Services.Qos.V2.Models
         /// </summary>
         /// <param name="projectId">projectId param</param>
         /// <param name="environmentId">environmentId param</param>
-        /// <param name="relayRegionId">relayRegionId param</param>
-        /// <param name="multiplayRegionId">multiplayRegionId param</param>
-        /// <param name="multiplayFleetId">multiplayFleetId param</param>
-        /// <param name="matchmakerQueueName">matchmakerQueueName param</param>
-        /// <param name="matchmakerPoolId">matchmakerPoolId param</param>
+        /// <param name="relayRegionId">Relay region in which this server is located.</param>
+        /// <param name="multiplayRegionId">Multiplay region in which this server is located.</param>
+        /// <param name="multiplayFleetId">List of Multiplay fleets for the current project &amp; environment that have servers in the same region as this QoS server. Fleets that are not in ONLINE status are excluded.</param>
+        /// <param name="matchmakerQueueName">List of Matchmaker queues for the current project &amp; environment that use fleets which have servers in the same region as this QoS server. Disabled queues are excluded.</param>
+        /// <param name="matchmakerPoolId">List of Matchmaker pools for the current project &amp; environment that use fleets which have servers in the same region as this QoS server. Disabled pools and pools that are part of disabled queues are excluded.</param>
         [Preserve]
         public QosServerAnnotations(List<string> projectId = default, List<string> environmentId = default, List<string> relayRegionId = default, List<string> multiplayRegionId = default, List<string> multiplayFleetId = default, List<string> matchmakerQueueName = default, List<string> matchmakerPoolId = default)
         {
@@ -65,35 +65,35 @@ namespace Unity.Services.Qos.V2.Models
         public List<string> EnvironmentId{ get; }
 
         /// <summary>
-        /// Parameter relayRegionId of QosServerAnnotations
+        /// Relay region in which this server is located.
         /// </summary>
         [Preserve]
         [DataMember(Name = "relayRegionId", EmitDefaultValue = false)]
         public List<string> RelayRegionId{ get; }
 
         /// <summary>
-        /// Parameter multiplayRegionId of QosServerAnnotations
+        /// Multiplay region in which this server is located.
         /// </summary>
         [Preserve]
         [DataMember(Name = "multiplayRegionId", EmitDefaultValue = false)]
         public List<string> MultiplayRegionId{ get; }
 
         /// <summary>
-        /// Parameter multiplayFleetId of QosServerAnnotations
+        /// List of Multiplay fleets for the current project &amp; environment that have servers in the same region as this QoS server. Fleets that are not in ONLINE status are excluded.
         /// </summary>
         [Preserve]
         [DataMember(Name = "multiplayFleetId", EmitDefaultValue = false)]
         public List<string> MultiplayFleetId{ get; }
 
         /// <summary>
-        /// Parameter matchmakerQueueName of QosServerAnnotations
+        /// List of Matchmaker queues for the current project &amp; environment that use fleets which have servers in the same region as this QoS server. Disabled queues are excluded.
         /// </summary>
         [Preserve]
         [DataMember(Name = "matchmakerQueueName", EmitDefaultValue = false)]
         public List<string> MatchmakerQueueName{ get; }
 
         /// <summary>
-        /// Parameter matchmakerPoolId of QosServerAnnotations
+        /// List of Matchmaker pools for the current project &amp; environment that use fleets which have servers in the same region as this QoS server. Disabled pools and pools that are part of disabled queues are excluded.
         /// </summary>
         [Preserve]
         [DataMember(Name = "matchmakerPoolId", EmitDefaultValue = false)]

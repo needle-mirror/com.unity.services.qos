@@ -73,7 +73,7 @@ namespace Unity.Services.Qos
         internal async Task<IList<Internal.QosResult>> GetSortedInternalQosResultsAsync(string service,
             IList<string> regions)
         {
-#if UGS_QOS_SUPPORTED && !UNITY_WEBGL
+#if UGS_QOS_SUPPORTED
             if (string.IsNullOrEmpty(_accessToken.AccessToken))
             {
                 throw new Exception("Access token not available, please sign in with the Authentication Service.");
@@ -104,13 +104,8 @@ namespace Unity.Services.Qos
             SendResultsMetrics(sortedResults, service, httpResp);
             return sortedResults;
 #else
-#if UNITY_WEBGL
-            throw new PlatformNotSupportedException(
-                "QoS SDK does not support WebGL at this time.");
-#else
             throw new UnsupportedEditorVersionException(
                 "QoS SDK does not support this version of Unity, please upgrade to 2020.3.34f1+, 2021.3.2f1+, 2022.2.0a10+, or newer.");
-#endif
 #endif
         }
 
@@ -158,7 +153,7 @@ namespace Unity.Services.Qos
         /// In case where no QoS servers can be found, no QoS is performed and an empty list is returned.
         public async Task<IList<IQosAnnotatedResult>> GetSortedMultiplayQosResultsAsync(IList<string> fleet)
         {
-            return await GetSortedInternalServiceQosResultsAsync(GetServiceServersRequest.ServiceIdMultiplay, null,
+            return await GetSortedInternalServiceQosResultsAsync("multiplay", null,
                 fleet);
         }
 
@@ -227,7 +222,7 @@ namespace Unity.Services.Qos
         internal async Task<IList<IQosAnnotatedResult>> GetSortedInternalServiceQosResultsAsync(string service,
             IList<string> regions, IList<string> fleet)
         {
-#if UGS_QOS_SUPPORTED && !UNITY_WEBGL
+#if UGS_QOS_SUPPORTED
             if (string.IsNullOrEmpty(_accessToken.AccessToken))
             {
                 throw new Exception("Access token not available, please sign in with the Authentication Service.");
@@ -265,13 +260,8 @@ namespace Unity.Services.Qos
             SendResultsMetrics(sortedResults.Cast<IQosResult>().ToList(), service, httpResp);
             return sortedResults;
 #else
-#if UNITY_WEBGL
-            throw new PlatformNotSupportedException(
-                "QoS SDK does not support WebGL at this time.");
-#else
             throw new UnsupportedEditorVersionException(
                 "QoS SDK does not support this version of Unity, please upgrade to 2020.3.34f1+, 2021.3.2f1+, 2022.2.0a10+, or newer.");
-#endif
 #endif
         }
 

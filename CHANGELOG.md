@@ -5,15 +5,21 @@ All notable changes to this package will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [1.5.0] - 2026-09-23
+### Added
+- QoS measurements over WebTransport on WebGL, using the endpoints QoS discovery advertises with an https URL. The v1 APIs used for Relay region selection no longer throw `PlatformNotSupportedException` on WebGL.
+
+### Changed
+- Updated the minimum supported Editor version to 6000.0.
+- Regenerated API from new spec version with multiplay deprecation
+
+### Fixed
+- Removed the deprecated `DEVELOPMENT_BUILD` define from the UDP runner, which removes the `UAC0009` warnings in Unity 6 projects. Its timing logs are now verbose logs, compiled in only when the `ENABLE_UNITY_QOS_VERBOSE_LOGGING` or the SDK-wide `ENABLE_UNITY_SERVICES_VERBOSE_LOGGING` scripting define is set, and all package logs carry the `[QoS]` tag.
+
 ## [1.4.1] - 2025-10-14
 ### Changed
 - Updated com.unity.services.authentication to 3.5.2
 - Removed ThirdPartyNotices.md
-
-## [1.4.0] - 2024-11-14
-
-### Changed
-- Updated the minimum supported Editor version to 2021.3.
 
 ## [1.3.2] - 2024-04-24
 ### Changed
@@ -88,3 +94,4 @@ unusable from the default Unity assembly (Assembly-CSharp)
 - SDK public API
 - Real QoS measurements
 - Public API documentation
+todo update this file

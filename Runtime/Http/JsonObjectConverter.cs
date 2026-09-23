@@ -39,7 +39,7 @@ namespace Unity.Services.Qos.Http
                 return;
             }
 
-            JToken t = JToken.FromObject(jobj.obj);
+            JToken t = JToken.FromObject(jobj.obj, serializer);
             t.WriteTo(writer);
         }
 
@@ -75,7 +75,7 @@ namespace Unity.Services.Qos.Http
         ///<inheritdoc cref="JsonConverter"/>
         public override bool CanConvert(System.Type objectType)
         {
-            throw new System.NotImplementedException();
+            return objectType == typeof(JsonObject);
         }
     }
 
@@ -138,7 +138,9 @@ namespace Unity.Services.Qos.Http
         ///<inheritdoc cref="JsonConverter"/>
         public override bool CanConvert(System.Type objectType)
         {
-            throw new System.NotImplementedException();
+            return objectType == typeof(Dictionary<string, IDeserializable>) ||
+                   objectType == typeof(List<IDeserializable>) ||
+                   objectType == typeof(List<List<IDeserializable>>);
         }
     }
 }

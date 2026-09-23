@@ -276,30 +276,15 @@ namespace Unity.Services.Qos.V2.QosDiscovery
     [Preserve]
     internal class GetAllServersRequest : QosDiscoveryApiBaseRequest
     {
-        /// <summary>Accessor for xRequestId </summary>
-        [Preserve]
-        public System.Guid XRequestId { get; }
-        /// <summary>Accessor for xUser </summary>
-        [Preserve]
-        public string XUser { get; }
-        /// <summary>Accessor for xUserType </summary>
-        [Preserve]
-        public string XUserType { get; }
         string PathAndQueryParams;
 
         /// <summary>
         /// GetAllServers Request Object.
         /// Get all servers
         /// </summary>
-        /// <param name="xRequestId">UUIDv4 representing the HTTP Request ID. Added automatically by UAS for authenticated users.</param>
-        /// <param name="xUser">JSON object of key:value pairs pertaining to the requesting user's identity. Fields are \"playerId\" (string), \"sessionId\" (UUIDv4), \"projectId\" (UUIDv4, required), \"environmentId\" (UUIDv4, required) and \"environmentName\" (string, required). Added automatically by UAS for authenticated users.</param>
-        /// <param name="xUserType">String identifier for the type of user</param>
         [Preserve]
-        public GetAllServersRequest(System.Guid xRequestId = default(System.Guid), string xUser = default(string), string xUserType = default(string))
+        public GetAllServersRequest()
         {
-            XRequestId = xRequestId;
-            XUser = xUser;
-            XUserType = xUserType;
             PathAndQueryParams = $"/v2alpha1/servers";
 
 
@@ -368,18 +353,6 @@ namespace Unity.Services.Qos.V2.QosDiscovery
                 headers.Add("Content-Type", "application/json");
             }
 
-            if(!XRequestId.Equals(default(System.Guid))) // note(phil): manually fixed.
-            {
-                headers.Add("X-Request-Id", XRequestId.ToString());
-            }
-            if(!string.IsNullOrEmpty(XUser))
-            {
-                headers.Add("X-User", XUser);
-            }
-            if(!string.IsNullOrEmpty(XUserType))
-            {
-                headers.Add("X-User-Type", XUserType);
-            }
 
             // We also check if there are headers that are defined as part of
             // the request configuration.

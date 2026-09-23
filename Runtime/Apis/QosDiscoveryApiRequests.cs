@@ -19,6 +19,7 @@ using UnityEngine.Networking;
 using UnityEngine.Scripting;
 using Unity.Services.Qos.Models;
 using Unity.Services.Qos.Scheduler;
+using Unity.Services.Qos.Http;
 using Unity.Services.Authentication.Internal;
 
 namespace Unity.Services.Qos.QosDiscovery
@@ -32,7 +33,7 @@ namespace Unity.Services.Qos.QosDiscovery
 
         public static string SerializeToString<T>(T obj)
         {
-            return JsonConvert.SerializeObject(obj, new JsonSerializerSettings{ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore});
+            return IsolatedJsonConvert.SerializeObject(obj, new JsonSerializerSettings{ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore});
         }
     }
 
@@ -288,7 +289,7 @@ namespace Unity.Services.Qos.QosDiscovery
         /// Get Servers
         /// </summary>
         /// <param name="region">region param</param>
-        /// <param name="service">The service for which the client is requesting QoS servers. Valid values are:   - relay   - multiplay</param>
+        /// <param name="service">The service for which the client is requesting QoS servers. Valid values are:   - relay  > __Note:__ Multiplay service is deprecated.</param>
         [Preserve]
         public GetServersRequest(List<string> region = default(List<string>), string service = default(string))
         {
@@ -401,10 +402,6 @@ namespace Unity.Services.Qos.QosDiscovery
         /// <summary>Valid value of serviceId for relay</summary>
         public const string ServiceIdRelay = "relay";
 
-        
-        /// <summary>Valid value of serviceId for multiplay</summary>
-        public const string ServiceIdMultiplay = "multiplay";
-
         /// <summary>Accessor for serviceId </summary>
         [Preserve]
         public string ServiceId { get; }
@@ -420,7 +417,7 @@ namespace Unity.Services.Qos.QosDiscovery
         /// GetServiceServers Request Object.
         /// Get Service Servers
         /// </summary>
-        /// <param name="serviceId">The service for which the client is requesting QoS servers. Valid values are:   - relay   - multiplay</param>
+        /// <param name="serviceId">The service for which the client is requesting QoS servers. Valid values are:   - relay  > __Note:__ Multiplay service is deprecated.</param>
         /// <param name="region">region param</param>
         /// <param name="fleet">fleet param</param>
         [Preserve]
