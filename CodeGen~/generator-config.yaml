@@ -25,6 +25,7 @@ x-recipeEngine:
     postProcessCommands:
         - rm -r unity-services-api-docs
         - rm openapi-generator.log
+        - find ./generated -type f -name '*.cs' -exec perl -pi -e 's/[ \t]+$//' {} +
         - cp -r ./generated/com.unity.services.qos/* ../
         - rm -r ./generated
         - echo "Done executing post process commands."

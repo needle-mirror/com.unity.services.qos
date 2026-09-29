@@ -44,7 +44,7 @@ namespace Unity.Services.Qos.Models
         [Preserve]
         [DataMember(Name = "servers", IsRequired = true, EmitDefaultValue = true)]
         public List<QosServer> Servers{ get; }
-    
+
         /// <summary>
         /// Formats a QosServersList into a string of key-value pairs for use as a path parameter.
         /// </summary>

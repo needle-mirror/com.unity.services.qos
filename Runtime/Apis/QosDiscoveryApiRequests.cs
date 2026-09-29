@@ -398,7 +398,7 @@ namespace Unity.Services.Qos.QosDiscovery
     [Preserve]
     internal class GetServiceServersRequest : QosDiscoveryApiBaseRequest
     {
-        
+
         /// <summary>Valid value of serviceId for relay</summary>
         public const string ServiceIdRelay = "relay";
 

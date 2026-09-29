@@ -22,6 +22,7 @@ x-recipeEngine:
         - rm openapi-generator.log
         - rm ./generated-v2/com.unity.services.qos/CHANGELOG.md  # the generated changelog seems broken.
         - echo 'todo update this file' >> ../CHANGELOG.md
+        - find ./generated-v2 -type f -name '*.cs' -exec perl -pi -e 's/[ \t]+$//' {} +
         - mkdir -p ../Runtime/v2
         - cp -r ./generated-v2/com.unity.services.qos/Runtime/* ../Runtime/v2/
         - rm -r ./generated-v2

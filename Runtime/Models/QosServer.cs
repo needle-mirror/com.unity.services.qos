@@ -48,21 +48,21 @@ namespace Unity.Services.Qos.Models
         [Preserve]
         [DataMember(Name = "endpoints", IsRequired = true, EmitDefaultValue = true)]
         public List<string> Endpoints{ get; }
-        
+
         /// <summary>
         /// The region to which the QoS server belongs.
         /// </summary>
         [Preserve]
         [DataMember(Name = "region", IsRequired = true, EmitDefaultValue = true)]
         public string Region{ get; }
-        
+
         /// <summary>
         /// The services using this QoS server.
         /// </summary>
         [Preserve]
         [DataMember(Name = "services", EmitDefaultValue = false)]
         public List<string> Services{ get; }
-    
+
         /// <summary>
         /// Formats a QosServer into a string of key-value pairs for use as a path parameter.
         /// </summary>
@@ -99,19 +99,19 @@ namespace Unity.Services.Qos.Models
                 var endpointsStringValue = Endpoints.ToString();
                 dictionary.Add("endpoints", endpointsStringValue);
             }
-            
+
             if (Region != null)
             {
                 var regionStringValue = Region.ToString();
                 dictionary.Add("region", regionStringValue);
             }
-            
+
             if (Services != null)
             {
                 var servicesStringValue = Services.ToString();
                 dictionary.Add("services", servicesStringValue);
             }
-            
+
             return dictionary;
         }
     }

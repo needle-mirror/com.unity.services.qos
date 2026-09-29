@@ -28,7 +28,7 @@ namespace Unity.Services.Qos.Http
     {
 
         /// <summary>Default Constructor.</summary>
-        
+
         public HttpClient()
         {
         }

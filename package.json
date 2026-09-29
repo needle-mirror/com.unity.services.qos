@@ -1,7 +1,7 @@
 {
   "name": "com.unity.services.qos",
   "displayName": "QoS",
-  "version": "1.5.0",
+  "version": "1.5.1",
   "unity": "6000.0",
   "description": "Provides connectivity Quality of Service (QoS) measurements from Unity game clients to different Unity game services running in various geographic regions.",
   "dependencies": {
@@ -12,18 +12,18 @@
     "com.unity.collections": "1.2.4"
   },
   "relatedPackages": {
-    "com.unity.services.qos.tests": "1.5.0"
+    "com.unity.services.qos.tests": "1.5.1"
   },
   "_upm": {
-    "changelog": "### Added\n- QoS measurements over WebTransport on WebGL, using the endpoints QoS discovery advertises with an https URL. The v1 APIs used for Relay region selection no longer throw `PlatformNotSupportedException` on WebGL.\n\n### Changed\n- Updated the minimum supported Editor version to 6000.0.\n- Regenerated API from new spec version with multiplay deprecation\n\n### Fixed\n- Removed the deprecated `DEVELOPMENT_BUILD` define from the UDP runner, which removes the `UAC0009` warnings in Unity 6 projects. Its timing logs are now verbose logs, compiled in only when the `ENABLE_UNITY_QOS_VERBOSE_LOGGING` or the SDK-wide `ENABLE_UNITY_SERVICES_VERBOSE_LOGGING` scripting define is set, and all package logs carry the `[QoS]` tag."
+    "changelog": "### Fixed\n- The package tests no longer produce obsolete API warnings for `GetSortedMultiplayQosResultsAsync` when they compile.\n- Removed the internal API snapshot file `Runtime/Unity.Services.QoS.api` from the published package.\n- Removed trailing whitespace from the generated API client sources and the changelog."
   },
   "upmCi": {
-    "footprint": "747cdd2416149eba8a859a87e9ce8ea76d9a20c9"
+    "footprint": "fe45dd545feb6ed61ea55047270e841fadba96d5"
   },
   "documentationUrl": "https://docs.unity3d.com/Packages/com.unity.services.qos@1.5/manual/index.html",
   "repository": {
     "url": "https://github.cds.internal.unity3d.com/unity/operate-services-sdk.git",
     "type": "git",
-    "revision": "20dfc9e9723b02445037d5c5dd142937ced60690"
+    "revision": "87250bdeff8c729d4dfdbeed0dfd0058cfd7d238"
   }
 }

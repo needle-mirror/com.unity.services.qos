@@ -39,5 +39,5 @@ namespace Unity.Services.Qos.V2.Http
         /// <returns>This object as the given type.</returns>
         T GetAs<T>(DeserializationSettings deserializationSettings = null);
     }
-        
+
 }

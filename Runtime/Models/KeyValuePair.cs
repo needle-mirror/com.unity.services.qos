@@ -40,18 +40,18 @@ namespace Unity.Services.Qos.Models
         }
 
         /// <summary>
-        /// 
+        ///
         /// </summary>
         [Preserve]
         [DataMember(Name = "key", IsRequired = true, EmitDefaultValue = true)]
         public string Key{ get; }
         /// <summary>
-        /// 
+        ///
         /// </summary>
         [Preserve]
         [DataMember(Name = "value", IsRequired = true, EmitDefaultValue = true)]
         public string Value{ get; }
-    
+
     }
 }
 

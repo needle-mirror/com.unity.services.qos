@@ -56,7 +56,7 @@ namespace Unity.Services.Qos.Http
                 {
                     return obj.ToString();
                 }
-                
+
                 return IsolatedJsonConvert.SerializeObject(obj);
             }
             catch (System.Exception)

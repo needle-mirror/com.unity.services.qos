@@ -5,6 +5,12 @@ All notable changes to this package will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [1.5.1] - 2026-09-29
+### Fixed
+- The package tests no longer produce obsolete API warnings for `GetSortedMultiplayQosResultsAsync` when they compile.
+- Removed the internal API snapshot file `Runtime/Unity.Services.QoS.api` from the published package.
+- Removed trailing whitespace from the generated API client sources and the changelog.
+
 ## [1.5.0] - 2026-09-23
 ### Added
 - QoS measurements over WebTransport on WebGL, using the endpoints QoS discovery advertises with an https URL. The v1 APIs used for Relay region selection no longer throw `PlatformNotSupportedException` on WebGL.
@@ -33,7 +39,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Added GetAllServersAsync.
 - Added GetQosResultsAsync.
 - Register service to service registry
-- Updated unity core to 1.12.4 
+- Updated unity core to 1.12.4
 
 ## [1.2.1] - 2023-06-28
 

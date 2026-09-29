@@ -43,6 +43,6 @@ namespace Unity.Services.Qos.Scheduler
                 IsPlaying = true;
             }
         }
-#endif   
+#endif
     }
 }
